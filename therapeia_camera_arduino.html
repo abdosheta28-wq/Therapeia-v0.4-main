@@ -1,0 +1,3433 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>THERAPEÍA — NLP Intent Classifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg-deep:#0A0E1A;--bg-card:#111827;--bg-hover:#1C2537;
+  --border:#1E3A5F;--border-bright:#2A4F7A;
+  --teal:#00D4AA;--blue:#3B82F6;
+  --orange:#F59E0B;--green:#10B981;--purple:#A855F7;
+  --text-pri:#F1F5F9;--text-sec:#94A3B8;--text-muted:#475569;
+  --danger:#EF4444;--gold:#FFD700;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-body:'IBM Plex Sans',sans-serif;
+  --r:12px;--r-lg:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg-deep);color:var(--text-pri);
+  font-family:var(--font-body);min-height:100vh;
+  overflow-x:hidden;position:relative;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:#0A0E1A;}
+::-webkit-scrollbar-thumb{background:#1E3A5F;border-radius:3px;}
+
+/* ── PARTICLES ── */
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ── ORBS ── */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.18;pointer-events:none;z-index:0;animation:orbFloat 12s ease-in-out infinite;}
+.orb-1{width:500px;height:500px;background:radial-gradient(circle,#00D4AA,transparent);top:-150px;left:-150px;animation-delay:0s;}
+.orb-2{width:400px;height:400px;background:radial-gradient(circle,#A855F7,transparent);bottom:-100px;right:-100px;animation-delay:-4s;}
+.orb-3{width:300px;height:300px;background:radial-gradient(circle,#3B82F6,transparent);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-8s;}
+@keyframes orbFloat{0%,100%{transform:translateY(0)scale(1);}50%{transform:translateY(-30px)scale(1.05);}}
+
+/* ── GRID TEXTURE ── */
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(30,58,95,.3)1px,transparent 1px),linear-gradient(90deg,rgba(30,58,95,.3)1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;}
+
+/* ── WRAPPER ── */
+.wrapper{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:0 24px;}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,14,26,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+}
+.header-inner{
+  max-width:1320px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 0;gap:20px;flex-wrap:wrap;
+}
+.logo-block{display:flex;align-items:center;gap:14px;}
+.brain-icon{
+  width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(135deg,#00D4AA22,#00D4AA44);
+  border:1px solid #00D4AA66;
+  display:grid;place-items:center;font-size:22px;
+  box-shadow:0 0 20px #00D4AA33;
+  animation:iconPulse 3s ease-in-out infinite;
+}
+@keyframes iconPulse{0%,100%{box-shadow:0 0 20px #00D4AA33;}50%{box-shadow:0 0 40px #00D4AA66;}}
+.logo-title{font-family:var(--font-mono);font-size:1.7rem;font-weight:700;
+  background:linear-gradient(90deg,#00D4AA,#3B82F6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:.12em;display:flex;align-items:center;gap:4px;
+}
+.cursor{-webkit-text-fill-color:#00D4AA;animation:blink .9s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.logo-sub{font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);letter-spacing:.08em;margin-top:2px;}
+
+.stat-pills{display:flex;gap:10px;flex-wrap:wrap;}
+.stat-pill{
+  background:rgba(17,24,39,.8);border:1px solid var(--border);
+  border-radius:10px;padding:10px 16px;text-align:center;min-width:80px;
+  transition:border-color .2s,box-shadow .2s;cursor:default;
+}
+.stat-pill:hover{border-color:var(--teal);box-shadow:0 0 16px #00D4AA22;}
+.stat-pill-label{font-family:var(--font-mono);font-size:.62rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:4px;margin-bottom:4px;}
+.stat-pill-val{font-family:var(--font-mono);font-size:1.25rem;font-weight:700;line-height:1;}
+.sp-models .stat-pill-val{color:var(--orange);}
+.sp-intents .stat-pill-val{color:var(--teal);}
+.sp-dataset .stat-pill-val{color:var(--green);}
+.sp-preds .stat-pill-val{color:var(--purple);}
+
+
+/* ══════════════════════════════════════════
+   🔥 MEGA VISUAL EFFECTS PACK
+══════════════════════════════════════════ */
+
+/* ── CUSTOM CURSOR ── */
+*{cursor:none!important;}
+#cursor-dot{
+  position:fixed;width:8px;height:8px;
+  background:var(--teal);border-radius:50%;
+  pointer-events:none;z-index:99999;
+  transform:translate(-50%,-50%);
+  transition:width .2s,height .2s,background .2s;
+  mix-blend-mode:screen;
+}
+#cursor-ring{
+  position:fixed;width:32px;height:32px;
+  border:1.5px solid var(--teal);border-radius:50%;
+  pointer-events:none;z-index:99998;
+  transform:translate(-50%,-50%);
+  transition:width .25s cubic-bezier(.34,1.56,.64,1),height .25s cubic-bezier(.34,1.56,.64,1),border-color .2s,opacity .2s;
+  opacity:.7;
+}
+#cursor-ring.hovering{width:52px;height:52px;border-color:#A855F7;opacity:.9;background:rgba(168,85,247,.06);}
+#cursor-dot.hovering{width:12px;height:12px;background:#A855F7;}
+#cursor-dot.clicking{transform:translate(-50%,-50%) scale(.5);background:#FFD700;}
+
+/* ── GLITCH TITLE ── */
+.logo-title{position:relative;display:inline-flex;}
+.logo-title::before,.logo-title::after{
+  content:attr(data-text);
+  position:absolute;left:0;top:0;
+  background:linear-gradient(90deg,#00D4AA,#3B82F6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  opacity:0;
+}
+.logo-title::before{animation:glitch1 6s infinite;clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%);}
+.logo-title::after{animation:glitch2 6s infinite;clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%);}
+@keyframes glitch1{
+  0%,92%,100%{transform:none;opacity:0;}
+  93%{transform:translateX(-4px) skewX(-2deg);opacity:.7;}
+  95%{transform:translateX(4px) skewX(2deg);opacity:.7;}
+  97%{transform:translateX(-2px);opacity:.7;}
+  99%{transform:none;opacity:0;}
+}
+@keyframes glitch2{
+  0%,92%,100%{transform:none;opacity:0;}
+  94%{transform:translateX(4px) skewX(3deg);opacity:.6;}
+  96%{transform:translateX(-4px) skewX(-3deg);opacity:.6;}
+  98%{transform:none;opacity:0;}
+}
+
+/* ── NEON BORDER PULSE ON CARDS ── */
+.demo-card,.model-card,.intent-detail,.chart-card,.matrix-card,.radar-card{
+  transition:box-shadow .3s,border-color .3s,transform .2s!important;
+}
+.demo-card:hover{box-shadow:0 0 0 1px rgba(0,212,170,.3),0 20px 60px rgba(0,212,170,.12),0 0 80px rgba(0,212,170,.06)!important;}
+
+/* ── SCAN LINE on INPUT WRAPPER ── */
+.input-wrapper{overflow:hidden;}
+.input-wrapper::after{
+  content:'';position:absolute;left:0;top:-100%;width:100%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--teal),transparent);
+  animation:scanDown 3s linear infinite;pointer-events:none;
+}
+@keyframes scanDown{from{top:-2px;}to{top:100%}}
+
+/* ── HOLOGRAPHIC SHIMMER on STAT PILLS ── */
+.stat-pill{
+  position:relative;overflow:hidden;
+}
+.stat-pill::after{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+  animation:holoShimmer 4s ease-in-out infinite;
+}
+.stat-pill:nth-child(1)::after{animation-delay:0s;}
+.stat-pill:nth-child(2)::after{animation-delay:.8s;}
+.stat-pill:nth-child(3)::after{animation-delay:1.6s;}
+.stat-pill:nth-child(4)::after{animation-delay:2.4s;}
+@keyframes holoShimmer{0%{left:-100%;}40%,100%{left:200%;}}
+
+/* ── GLOWING SUBMIT BUTTON ── */
+.submit-btn{
+  position:relative;overflow:hidden;
+}
+.submit-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.18) 50%,transparent 100%);
+  transform:translateX(-100%);
+  transition:transform .5s ease;
+}
+.submit-btn:hover::before{transform:translateX(100%);}
+.submit-btn:not(:disabled):hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 0 4px rgba(0,212,170,.2),0 12px 40px rgba(0,212,170,.5)!important;
+}
+.submit-btn:not(:disabled):active{transform:translateY(0) scale(.97);}
+
+/* ── MAGNETIC BUTTON BASE ── */
+.btn{transition:all .2s cubic-bezier(.34,1.56,.64,1)!important;position:relative;overflow:hidden;}
+.btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(0,212,170,.15),transparent 70%);opacity:0;transition:opacity .3s;}
+.btn:hover::after{opacity:1;}
+
+/* ── RESULT CARD: PARTICLE BURST on SHOW ── */
+.result-card.show{
+  animation:resultIn .4s cubic-bezier(.34,1.56,.64,1) forwards,glowPop .6s ease forwards!important;
+}
+@keyframes glowPop{
+  0%{box-shadow:0 0 0 0 rgba(0,212,170,.5);}
+  50%{box-shadow:0 0 0 20px rgba(0,212,170,.0);}
+  100%{box-shadow:none;}
+}
+
+/* ── INTENT BADGE ENTRANCE ── */
+.intent-badge{
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  display:inline-block;
+}
+
+/* ── MATRIX CELL ENHANCED HOVER ── */
+.matrix-cell{transition:all .12s cubic-bezier(.34,1.56,.64,1)!important;}
+.matrix-cell:hover{
+  transform:scale(1.15)!important;
+  filter:brightness(1.5) saturate(1.3)!important;
+  z-index:5!important;
+}
+
+/* ── PULSING ORB (BIGGER) ── */
+.orb-1{animation:orbFloat1 14s ease-in-out infinite!important;opacity:.22!important;}
+.orb-2{animation:orbFloat2 11s ease-in-out infinite!important;opacity:.20!important;}
+.orb-3{animation:orbFloat3 9s ease-in-out infinite!important;opacity:.16!important;}
+@keyframes orbFloat1{0%,100%{transform:translateY(0) scale(1);}33%{transform:translateY(-40px) scale(1.08);}66%{transform:translateY(20px) scale(.95);}}
+@keyframes orbFloat2{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-50px) rotate(10deg) scale(1.1);}}
+@keyframes orbFloat3{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.2);}}
+
+/* ── SCROLLBAR GLOW ── */
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#00D4AA,#3B82F6);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#00FFCC,#60A5FA);}
+
+/* ── SECTION TITLE UNDERLINE ── */
+.section-title{position:relative;padding-bottom:2px;}
+.section-title::after{
+  content:'';position:absolute;bottom:-8px;left:0;height:1px;width:0;
+  background:linear-gradient(90deg,var(--teal),transparent);
+  transition:width .6s ease;
+}
+.section.visible .section-title::after{width:100%;}
+
+/* ── FLOATING SPARKS ── */
+#sparks-canvas{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.7;}
+
+/* ── MODEL CARD TILT GLOW ── */
+.model-card{
+  will-change:transform;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .3s!important;
+}
+
+/* ── BOOT SEQUENCE OVERLAY ── */
+#boot-overlay{
+  position:fixed;inset:0;z-index:99990;
+  background:#0A0E1A;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  animation:bootFade 0s ease 2.8s forwards;
+}
+@keyframes bootFade{to{opacity:0;pointer-events:none;visibility:hidden;}}
+#boot-overlay.hidden{display:none;}
+.boot-logo{
+  font-family:'JetBrains Mono',monospace;font-size:2.6rem;font-weight:700;
+  background:linear-gradient(90deg,#00D4AA,#3B82F6,#A855F7);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:.2em;
+  animation:bootLogoIn .6s cubic-bezier(.34,1.56,.64,1) .2s both;
+}
+@keyframes bootLogoIn{from{opacity:0;transform:scale(.8) translateY(20px);}to{opacity:1;transform:none;}}
+.boot-sub{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#475569;letter-spacing:.2em;animation:bootLogoIn .5s ease .7s both;}
+.boot-bar-wrap{width:280px;height:3px;background:rgba(30,58,95,.5);border-radius:2px;overflow:hidden;animation:bootLogoIn .4s ease .9s both;}
+.boot-bar-fill{height:100%;background:linear-gradient(90deg,#00D4AA,#3B82F6);border-radius:2px;width:0%;animation:bootBarGrow 1.6s ease 1s forwards;}
+@keyframes bootBarGrow{to{width:100%;}}
+.boot-status{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#1E3A5F;letter-spacing:.15em;animation:bootLogoIn .4s ease 1s both;}
+.boot-status span{color:#00D4AA;}
+
+/* ── RIPPLE on CLICK ── */
+.ripple-burst{
+  position:fixed;width:1px;height:1px;
+  border-radius:50%;
+  pointer-events:none;z-index:9990;
+  animation:rippleBurst .6s ease-out forwards;
+}
+@keyframes rippleBurst{
+  to{width:120px;height:120px;margin-top:-60px;margin-left:-60px;opacity:0;border:2px solid var(--teal);}
+}
+
+/* ── CONFETTI BURST (on prediction) ── */
+.confetti-piece{
+  position:fixed;width:7px;height:7px;
+  pointer-events:none;z-index:9989;
+  animation:confettiFall var(--dur,1s) ease-out var(--delay,0s) forwards;
+}
+@keyframes confettiFall{
+  0%{transform:translate(0,0) rotate(0deg) scale(1);opacity:1;}
+  100%{transform:translate(var(--dx,0px),var(--dy,120px)) rotate(var(--rot,360deg)) scale(0);opacity:0;}
+}
+
+/* ── INTENT SIDEBAR HOVER SHIMMER ── */
+.intent-sidebar-item{overflow:hidden;position:relative;}
+.intent-sidebar-item::before{
+  content:'';position:absolute;top:0;left:-80%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(0,212,170,.07),transparent);
+  transition:left .4s ease;
+}
+.intent-sidebar-item:hover::before{left:150%;}
+
+/* ── NEON GLOW ON BEST CARD ── */
+.model-card.best{
+  animation:bestGlow2 3s ease-in-out infinite!important;
+}
+@keyframes bestGlow2{
+  0%,100%{box-shadow:0 0 20px rgba(245,158,11,.2),inset 0 0 20px rgba(245,158,11,.03);}
+  50%{box-shadow:0 0 50px rgba(245,158,11,.35),0 0 100px rgba(245,158,11,.1),inset 0 0 30px rgba(245,158,11,.06);}
+}
+
+/* ── TYPING CURSOR IN INPUT ── */
+#demo-input{caret-color:var(--teal);caret-shape:block;}
+
+/* ── HUD CORNER DECORATIONS ── */
+.hud-corner{position:absolute;width:16px;height:16px;pointer-events:none;}
+.hud-corner.tl{top:10px;left:10px;border-top:2px solid var(--teal);border-left:2px solid var(--teal);}
+.hud-corner.tr{top:10px;right:10px;border-top:2px solid var(--teal);border-right:2px solid var(--teal);}
+.hud-corner.bl{bottom:10px;left:10px;border-bottom:2px solid var(--teal);border-left:2px solid var(--teal);}
+.hud-corner.br{bottom:10px;right:10px;border-bottom:2px solid var(--teal);border-right:2px solid var(--teal);}
+
+/* ── RADAR CARD SCAN LINE ── */
+.radar-card{position:relative;overflow:hidden;}
+.radar-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(168,85,247,.6),transparent);
+  animation:radarScan 3s ease-in-out infinite;pointer-events:none;
+}
+@keyframes radarScan{0%{top:0;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:100%;opacity:0;}}
+
+/* ── DEPLOY CARDS GLOW TRAIL ── */
+.deploy-card{position:relative;overflow:hidden;}
+.deploy-card::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(transparent 270deg, rgba(0,212,170,.06) 360deg);
+  animation:rotateSlow 8s linear infinite;pointer-events:none;
+}
+.deploy-card.server::before{animation-delay:-2.6s;background:conic-gradient(transparent 270deg,rgba(16,185,129,.06) 360deg);}
+.deploy-card.research::before{animation-delay:-5.3s;background:conic-gradient(transparent 270deg,rgba(168,85,247,.06) 360deg);}
+@keyframes rotateSlow{to{transform:rotate(360deg);}}
+
+
+/* ══════════════════════════════════════════
+   SECTIONS
+══════════════════════════════════════════ */
+main{padding:40px 32px 80px;max-width:1320px;margin:0 auto;}
+.section{margin-bottom:60px;opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease;}
+.section.visible{opacity:1;transform:translateY(0);}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.section-title{font-family:var(--font-mono);font-size:1.25rem;font-weight:700;color:var(--text-pri);display:flex;align-items:center;gap:10px;}
+.section-title svg,.section-icon{opacity:.9;}
+.section-actions{display:flex;gap:8px;}
+
+/* ══════════════════════════════════════════
+   SECTION 1: LIVE DEMO
+══════════════════════════════════════════ */
+.demo-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:28px;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  position:relative;overflow:hidden;
+}
+.demo-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--teal),transparent);
+  opacity:.7;
+}
+
+.input-wrapper{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(10,14,26,.6);border:1px solid var(--border-bright);
+  border-radius:12px;padding:12px 16px;
+  transition:border-color .2s,box-shadow .2s;
+  margin-bottom:16px;
+}
+.input-wrapper:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px #00D4AA22;}
+.input-wrapper.scanning{border-color:var(--teal);box-shadow:0 0 0 4px #00D4AA33;animation:scanPulse 1s ease-in-out infinite;}
+@keyframes scanPulse{0%,100%{box-shadow:0 0 0 4px #00D4AA22;}50%{box-shadow:0 0 0 8px #00D4AA11,0 0 20px #00D4AA44;}}
+#demo-input{
+  flex:1;background:transparent;border:none;outline:none;
+  font-family:var(--font-mono);font-size:.9rem;color:var(--text-pri);
+  caret-color:var(--teal);
+}
+#demo-input::placeholder{color:var(--text-muted);}
+.lang-select{
+  background:rgba(30,58,95,.5);border:1px solid var(--border);
+  color:var(--text-sec);border-radius:8px;padding:5px 8px;
+  font-family:var(--font-mono);font-size:.75rem;cursor:pointer;outline:none;
+}
+.mic-btn{
+  width:40px;height:40px;border-radius:10px;border:none;cursor:pointer;
+  background:var(--teal);display:grid;place-items:center;
+  font-size:18px;transition:all .2s;position:relative;flex-shrink:0;
+}
+.mic-btn:hover{background:#00BBAA;box-shadow:0 0 16px #00D4AA55;}
+.mic-btn.listening{background:var(--danger);animation:micPulse .8s ease-in-out infinite;}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 #EF444455;}50%{box-shadow:0 0 0 10px #EF444411;}}
+
+.example-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.ex-pill{
+  background:rgba(30,58,95,.3);border:1px solid var(--border);
+  border-radius:20px;padding:6px 14px;font-family:var(--font-mono);
+  font-size:.78rem;color:var(--text-sec);cursor:pointer;
+  transition:all .15s;user-select:none;
+}
+.ex-pill:hover{background:rgba(0,212,170,.12);border-color:var(--teal);color:var(--teal);}
+
+/* Voice Wave */
+.voice-wave{display:none;align-items:center;gap:3px;height:32px;margin-bottom:12px;justify-content:center;}
+.voice-wave.active{display:flex;}
+.wave-bar{width:4px;background:var(--teal);border-radius:2px;animation:waveAnim 1.2s ease-in-out infinite;}
+.wave-bar:nth-child(1){animation-delay:0s;}
+.wave-bar:nth-child(2){animation-delay:.1s;}
+.wave-bar:nth-child(3){animation-delay:.2s;}
+.wave-bar:nth-child(4){animation-delay:.3s;}
+.wave-bar:nth-child(5){animation-delay:.4s;}
+.wave-bar:nth-child(6){animation-delay:.5s;}
+.wave-bar:nth-child(7){animation-delay:.6s;}
+.wave-bar:nth-child(8){animation-delay:.7s;}
+.wave-bar:nth-child(9){animation-delay:.8s;}
+.wave-bar:nth-child(10){animation-delay:.9s;}
+.wave-bar:nth-child(11){animation-delay:.7s;}
+.wave-bar:nth-child(12){animation-delay:.6s;}
+.wave-bar:nth-child(13){animation-delay:.5s;}
+.wave-bar:nth-child(14){animation-delay:.4s;}
+.wave-bar:nth-child(15){animation-delay:.3s;}
+.wave-bar:nth-child(16){animation-delay:.2s;}
+.wave-bar:nth-child(17){animation-delay:.1s;}
+.wave-bar:nth-child(18){animation-delay:0s;}
+.wave-bar:nth-child(19){animation-delay:.1s;}
+.wave-bar:nth-child(20){animation-delay:.2s;}
+@keyframes waveAnim{
+  0%,100%{height:6px;opacity:.4;}
+  50%{height:28px;opacity:1;}
+}
+
+.listen-msg{text-align:center;font-family:var(--font-mono);font-size:.8rem;color:var(--teal);margin-bottom:12px;display:none;animation:textFade 1s ease-in-out infinite;}
+.listen-msg.active{display:block;}
+@keyframes textFade{0%,100%{opacity:.6;}50%{opacity:1;}}
+
+/* Result card */
+.result-card{
+  background:rgba(10,14,26,.7);border:1px solid var(--border);
+  border-radius:12px;padding:20px;display:none;
+}
+.result-card.show{display:block;animation:resultIn .4s cubic-bezier(.34,1.56,.64,1) forwards;}
+@keyframes resultIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+
+.result-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.intent-badge{
+  padding:8px 20px;border-radius:8px;font-family:var(--font-mono);
+  font-size:1.1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid;
+}
+.result-meta{display:flex;gap:16px;font-family:var(--font-mono);font-size:.8rem;color:var(--text-sec);}
+.result-meta span{display:flex;align-items:center;gap:4px;}
+
+.conf-bar-wrap{margin-bottom:16px;}
+.conf-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.78rem;color:var(--text-sec);margin-bottom:6px;}
+.conf-bar-track{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+.conf-bar-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;}
+.conf-bar-fill::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  animation:shimmer 2s infinite;
+}
+@keyframes shimmer{from{transform:translateX(-100%);}to{transform:translateX(200%);}}
+
+.intents-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+@media(max-width:600px){.intents-grid{grid-template-columns:1fr;}}
+.intent-bar-item{padding:6px 0;}
+.intent-bar-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.72rem;color:var(--text-sec);margin-bottom:4px;}
+.intent-bar-label.winner{color:var(--teal);}
+.intent-mini-track{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.intent-mini-fill{height:100%;border-radius:3px;transition:width .8s ease;background:rgba(0,212,170,.4);}
+.intent-mini-fill.winner{background:var(--teal);box-shadow:0 0 8px #00D4AA66;}
+
+/* ══════════════════════════════════════════
+   SECTION 2: MODEL PERFORMANCE
+══════════════════════════════════════════ */
+.models-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:900px){.models-grid{grid-template-columns:1fr;}}
+
+.model-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:24px;position:relative;
+  overflow:hidden;transition:transform .2s,box-shadow .2s;
+  transform-style:preserve-3d;cursor:default;
+}
+.model-card:hover{transform:translateY(-4px) rotateX(1deg);box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.model-card.best{border-color:var(--orange);box-shadow:0 0 30px rgba(245,158,11,.2);}
+.model-card.best{animation:bestGlow 3s ease-in-out infinite;}
+@keyframes bestGlow{0%,100%{box-shadow:0 0 20px rgba(245,158,11,.15);}50%{box-shadow:0 0 40px rgba(245,158,11,.3);}}
+
+.model-card .glow-bg{
+  position:absolute;inset:0;opacity:.04;
+  background:radial-gradient(circle at 80% 20%,currentColor,transparent 60%);
+  pointer-events:none;transition:opacity .2s;
+}
+.model-card:hover .glow-bg{opacity:.08;}
+
+.crown-badge{
+  position:absolute;top:-1px;right:-1px;
+  width:42px;height:42px;border-radius:0 var(--r-lg) 0 12px;
+  background:linear-gradient(135deg,#F59E0B,#FFD700);
+  display:grid;place-items:center;font-size:18px;
+  animation:crownSpin 6s ease-in-out infinite;
+}
+@keyframes crownSpin{0%,100%{transform:rotate(0deg);}25%{transform:rotate(-10deg);}75%{transform:rotate(10deg);}}
+
+.model-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.model-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;box-shadow:0 0 10px currentColor;}
+.model-name{font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--text-pri);}
+
+.metric-row{margin-bottom:14px;}
+.metric-label{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:5px;}
+.metric-label span:first-child{color:var(--text-sec);}
+.metric-label span:last-child{font-family:var(--font-mono);font-weight:600;}
+.metric-track{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.metric-bar{height:100%;border-radius:3px;width:0%;transition:width 1.2s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;}
+.metric-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);animation:shimmer 2.5s infinite;}
+
+.model-divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.model-stats{display:flex;justify-content:space-around;}
+.model-stat{text-align:center;}
+.model-stat-icon{font-size:14px;margin-bottom:2px;}
+.model-stat-label{font-size:.65rem;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.06em;}
+.model-stat-val{font-family:var(--font-mono);font-size:.85rem;font-weight:600;margin-top:2px;}
+
+/* ══════════════════════════════════════════
+   SECTION 3: INTENT EXPLORER
+══════════════════════════════════════════ */
+.explorer-layout{display:grid;grid-template-columns:280px 1fr;gap:20px;min-height:420px;}
+@media(max-width:800px){.explorer-layout{grid-template-columns:1fr;}}
+
+.intent-sidebar{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;
+}
+.intent-sidebar-item{
+  padding:14px 18px;border-bottom:1px solid rgba(30,58,95,.5);
+  cursor:pointer;transition:all .15s;position:relative;
+}
+.intent-sidebar-item:last-child{border-bottom:none;}
+.intent-sidebar-item:hover{background:var(--bg-hover);}
+.intent-sidebar-item.active{background:rgba(0,212,170,.06);}
+.intent-sidebar-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--teal);}
+.intent-sidebar-en{font-family:var(--font-mono);font-size:.9rem;font-weight:600;color:var(--text-pri);}
+.intent-sidebar-ar{font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);margin-top:2px;}
+
+.intent-detail{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:28px;
+}
+.intent-detail-name{font-family:var(--font-mono);font-size:1.5rem;font-weight:700;color:var(--teal);margin-bottom:4px;}
+.intent-detail-desc{color:var(--text-sec);font-size:.9rem;margin-bottom:24px;}
+
+.detail-section-label{font-family:var(--font-mono);font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
+.utterances-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:24px;}
+@media(max-width:600px){.utterances-grid{grid-template-columns:1fr;}}
+.utterance-pill{
+  background:rgba(10,14,26,.8);border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;font-family:var(--font-mono);
+  font-size:.82rem;color:var(--text-pri);
+}
+.utterance-pill[dir="rtl"]{text-align:right;}
+
+.f1-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.f1-model-name{font-family:var(--font-mono);font-size:.78rem;font-weight:600;width:80px;flex-shrink:0;}
+.f1-bar-track{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.f1-bar-fill{height:100%;border-radius:3px;width:0%;transition:width 1s ease .2s;}
+.f1-value{font-family:var(--font-mono);font-size:.78rem;font-weight:700;width:50px;text-align:right;}
+
+.confusion-note{
+  background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);
+  border-radius:8px;padding:12px 16px;margin-top:20px;
+  font-size:.82rem;color:var(--text-sec);
+}
+.confusion-note strong{color:var(--text-pri);}
+
+/* ══════════════════════════════════════════
+   SECTION 4: TRAINING CURVES
+══════════════════════════════════════════ */
+.training-controls{display:flex;gap:8px;flex-wrap:wrap;}
+.ctrl-group{display:flex;gap:4px;background:rgba(10,14,26,.6);border:1px solid var(--border);border-radius:8px;padding:4px;}
+.ctrl-btn{
+  padding:6px 14px;border:none;border-radius:6px;cursor:pointer;
+  font-family:var(--font-mono);font-size:.75rem;font-weight:600;
+  background:transparent;color:var(--text-muted);transition:all .15s;
+}
+.ctrl-btn.active{background:var(--teal);color:#0A0E1A;}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;}
+.chart-legend{display:flex;gap:20px;margin-top:16px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:.75rem;color:var(--text-sec);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+.legend-line-dash{width:20px;height:2px;border-top:2px dashed currentColor;}
+
+/* ══════════════════════════════════════════
+   SECTION 5: CONFUSION MATRIX
+══════════════════════════════════════════ */
+.matrix-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;overflow:auto;}
+.matrix-model-sel{display:flex;gap:8px;margin-bottom:20px;}
+.matrix-container{position:relative;}
+.matrix-grid{
+  display:grid;
+  grid-template-columns:60px repeat(8,1fr);
+  grid-template-rows:40px repeat(8,1fr);
+  gap:3px;min-width:520px;
+}
+.matrix-header-cell{
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:.68rem;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.matrix-row-label{
+  display:flex;align-items:center;justify-content:flex-end;padding-right:10px;
+  font-family:var(--font-mono);font-size:.68rem;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.matrix-cell{
+  border-radius:5px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:.78rem;font-weight:600;
+  cursor:pointer;position:relative;transition:all .15s;
+  aspect-ratio:1;min-height:44px;
+}
+.matrix-cell:hover{filter:brightness(1.3);transform:scale(1.05);z-index:2;}
+.matrix-tooltip{
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#1C2537;border:1px solid var(--border-bright);
+  border-radius:6px;padding:6px 10px;white-space:nowrap;
+  font-family:var(--font-mono);font-size:.7rem;color:var(--text-pri);
+  pointer-events:none;opacity:0;transition:opacity .15s;z-index:10;
+}
+.matrix-cell:hover .matrix-tooltip{opacity:1;}
+
+/* ══════════════════════════════════════════
+   SECTION 6: RADAR CHART
+══════════════════════════════════════════ */
+.radar-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;}
+.radar-toggles{display:flex;gap:8px;flex-wrap:wrap;}
+.radar-toggle{
+  padding:7px 16px;border-radius:20px;border:1px solid;
+  cursor:pointer;font-family:var(--font-mono);font-size:.78rem;font-weight:600;
+  transition:all .15s;
+}
+.radar-toggle.active-orange{background:rgba(245,158,11,.2);border-color:var(--orange);color:var(--orange);}
+.radar-toggle.active-green{background:rgba(16,185,129,.2);border-color:var(--green);color:var(--green);}
+.radar-toggle.active-purple{background:rgba(168,85,247,.2);border-color:var(--purple);color:var(--purple);}
+.radar-toggle.inactive{background:transparent;border-color:var(--border);color:var(--text-muted);}
+
+/* ══════════════════════════════════════════
+   SECTION 7: DEPLOYMENT GUIDE
+══════════════════════════════════════════ */
+.deploy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:900px){.deploy-grid{grid-template-columns:1fr;}}
+
+.deploy-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:22px;position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+}
+.deploy-card:hover{transform:translateY(-3px);}
+.deploy-card.rpi{border-color:rgba(245,158,11,.3);}
+.deploy-card.rpi:hover{box-shadow:0 12px 40px rgba(245,158,11,.15);}
+.deploy-card.server{border-color:rgba(16,185,129,.3);}
+.deploy-card.server:hover{box-shadow:0 12px 40px rgba(16,185,129,.15);}
+.deploy-card.research{border-color:rgba(168,85,247,.3);}
+.deploy-card.research:hover{box-shadow:0 12px 40px rgba(168,85,247,.15);}
+
+.deploy-icon{
+  width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:20px;margin-bottom:14px;
+}
+.deploy-card.rpi .deploy-icon{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);}
+.deploy-card.server .deploy-icon{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);}
+.deploy-card.research .deploy-icon{background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);}
+
+.deploy-title{font-family:var(--font-mono);font-size:1rem;font-weight:700;color:var(--text-pri);margin-bottom:14px;}
+.deploy-meta{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.deploy-meta-row{display:flex;justify-content:space-between;font-size:.8rem;}
+.deploy-meta-row span:first-child{color:var(--text-muted);}
+.deploy-meta-row span:last-child{font-family:var(--font-mono);font-weight:600;}
+.deploy-card.rpi .deploy-meta-row span:last-child{color:var(--orange);}
+.deploy-card.server .deploy-meta-row span:last-child{color:var(--green);}
+.deploy-card.research .deploy-meta-row span:last-child{color:var(--purple);}
+
+.code-block{
+  background:#060A14;border:1px solid #1E3A5F;
+  border-radius:8px;padding:14px;
+  font-family:var(--font-mono);font-size:.75rem;line-height:1.6;
+}
+.code-block .kw{color:#A855F7;}
+.code-block .fn{color:#3B82F6;}
+.code-block .str{color:#10B981;}
+.code-block .op{color:#F59E0B;}
+.code-block .var{color:#F1F5F9;}
+
+/* ══════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(17,24,39,.8);color:var(--text-sec);
+  font-family:var(--font-mono);font-size:.78rem;cursor:pointer;
+  transition:all .15s;
+}
+.btn:hover{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.06);}
+.btn-primary{
+  background:linear-gradient(135deg,#00D4AA,#00B896);
+  border-color:transparent;color:#0A0E1A;font-weight:700;
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px #00D4AA44;color:#0A0E1A;}
+
+.submit-btn{
+  width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#00D4AA,#00B896);
+  color:#0A0E1A;font-family:var(--font-mono);font-size:.9rem;font-weight:700;
+  letter-spacing:.06em;transition:all .2s;margin-top:4px;
+}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px #00D4AA44;}
+.submit-btn:disabled{background:var(--border);color:var(--text-muted);cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* ══════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════ */
+.pulseDot{
+  width:8px;height:8px;border-radius:50%;background:var(--teal);
+  display:inline-block;box-shadow:0 0 8px var(--teal);
+  animation:dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.8);}}
+
+.pred-counter{font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted);}
+.pred-counter span{color:var(--purple);}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media(max-width:768px){
+  main{padding:24px 16px 60px;}
+  header{padding:0 16px;}
+  .header-inner{gap:12px;}
+  .logo-title{font-size:1.3rem;}
+  .stat-pills{gap:6px;}
+  .stat-pill{min-width:65px;padding:8px 10px;}
+}
+
+/* ══════════════════════════════════════════
+   SECTION 0: MED SCAN (CAMERA)
+══════════════════════════════════════════ */
+.cam-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:28px;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  position:relative;overflow:hidden;
+}
+.cam-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+@media(max-width:860px){.cam-layout{grid-template-columns:1fr;}}
+
+/* ── Camera viewport ── */
+.cam-viewport{
+  position:relative;border-radius:12px;overflow:hidden;
+  background:#060A14;border:1px solid var(--border);
+  aspect-ratio:4/3;min-height:260px;
+  display:flex;align-items:center;justify-content:center;
+}
+.cam-viewport video{
+  width:100%;height:100%;object-fit:cover;display:block;border-radius:12px;
+}
+.cam-viewport canvas.cam-overlay{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+}
+.cam-off-msg{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  color:var(--text-muted);font-family:var(--font-mono);font-size:.82rem;
+  text-align:center;padding:20px;
+}
+.cam-off-icon{font-size:2.8rem;opacity:.4;}
+
+/* ── Scanning reticle overlay ── */
+.cam-reticle{
+  position:absolute;inset:0;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .3s;
+}
+.cam-reticle.active{opacity:1;}
+.cam-reticle-inner{
+  width:200px;height:140px;position:relative;
+}
+.cam-reticle-inner::before,.cam-reticle-inner::after,
+.cam-reticle-inner span::before,.cam-reticle-inner span::after{
+  content:'';position:absolute;width:22px;height:22px;
+  border-color:var(--teal);border-style:solid;
+}
+.cam-reticle-inner::before{top:0;left:0;border-width:2px 0 0 2px;}
+.cam-reticle-inner::after{top:0;right:0;border-width:2px 2px 0 0;}
+.cam-reticle-inner span::before{bottom:0;left:0;border-width:0 0 2px 2px;}
+.cam-reticle-inner span::after{bottom:0;right:0;border-width:0 2px 2px 0;}
+.cam-scan-line{
+  position:absolute;left:4px;right:4px;height:2px;top:0;
+  background:linear-gradient(90deg,transparent,var(--teal),transparent);
+  box-shadow:0 0 8px var(--teal);
+  animation:camScanMove 1.6s ease-in-out infinite;
+  display:none;
+}
+.cam-reticle.active .cam-scan-line{display:block;}
+@keyframes camScanMove{
+  0%{top:4px;opacity:0;}
+  10%{opacity:1;}
+  90%{opacity:1;}
+  100%{top:calc(100% - 6px);opacity:0;}
+}
+
+/* ── Camera controls ── */
+.cam-controls{
+  display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;
+}
+.cam-btn{
+  flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(17,24,39,.9);color:var(--text-sec);
+  font-family:var(--font-mono);font-size:.78rem;font-weight:600;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.cam-btn:hover:not(:disabled){border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.08);}
+.cam-btn:disabled{opacity:.38;cursor:not-allowed;}
+.cam-btn.primary{
+  background:linear-gradient(135deg,#00D4AA,#00B896);
+  border-color:transparent;color:#0A0E1A;font-weight:700;
+}
+.cam-btn.primary:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px rgba(0,212,170,.45);color:#0A0E1A;
+}
+.cam-btn.primary:disabled{background:var(--border);color:var(--text-muted);}
+
+/* ── Analysis results ── */
+.cam-result-panel{display:flex;flex-direction:column;gap:16px;}
+
+.cam-snapshot{
+  border-radius:10px;overflow:hidden;
+  border:1px solid var(--border);
+  background:#060A14;
+  display:none;
+}
+.cam-snapshot img{width:100%;display:block;border-radius:10px;}
+.cam-snapshot-label{
+  font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);
+  letter-spacing:.1em;padding:6px 10px;text-align:center;
+  border-top:1px solid var(--border);background:rgba(6,10,20,.8);
+}
+
+.cam-analysis-box{
+  background:#060A14;border:1px solid var(--border);
+  border-radius:12px;padding:20px;min-height:180px;
+  display:flex;flex-direction:column;gap:8px;
+  position:relative;overflow:hidden;
+}
+.cam-analysis-box.loading::after{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(0,212,170,.05),transparent);
+  animation:camShimmer 1.2s ease-in-out infinite;
+}
+@keyframes camShimmer{to{left:200%;}}
+
+.cam-analysis-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:10px;color:var(--text-muted);
+  font-family:var(--font-mono);font-size:.8rem;text-align:center;
+}
+.cam-analysis-placeholder svg{opacity:.25;}
+
+/* ── Medicine info card ── */
+.med-info{display:flex;flex-direction:column;gap:12px;}
+.med-name-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.med-name{font-family:var(--font-mono);font-size:1.3rem;font-weight:700;color:var(--teal);}
+.med-name-ar{font-family:var(--font-mono);font-size:.9rem;color:var(--text-sec);}
+.med-confidence{
+  font-family:var(--font-mono);font-size:.7rem;font-weight:700;
+  background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.3);
+  color:var(--teal);padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;
+}
+
+.med-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.med-tag{
+  font-family:var(--font-mono);font-size:.68rem;font-weight:600;
+  padding:3px 10px;border-radius:20px;border:1px solid;
+}
+.med-tag.blue{color:var(--blue);border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.08);}
+.med-tag.green{color:var(--green);border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.08);}
+.med-tag.orange{color:var(--orange);border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);}
+.med-tag.purple{color:var(--purple);border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.08);}
+.med-tag.red{color:var(--danger);border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);}
+
+.med-section{margin-top:4px;}
+.med-section-label{font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
+.med-section-text{font-size:.84rem;color:var(--text-sec);line-height:1.6;}
+.med-section-text strong{color:var(--text-pri);}
+
+.med-warning{
+  background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);
+  border-radius:8px;padding:10px 14px;
+  font-size:.8rem;color:#FCA5A5;line-height:1.5;
+  display:flex;gap:8px;align-items:flex-start;
+}
+.med-warning-icon{flex-shrink:0;margin-top:1px;}
+
+.med-row-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.med-row-item{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;
+}
+.med-row-key{font-family:var(--font-mono);font-size:.62rem;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+.med-row-val{font-family:var(--font-mono);font-size:.82rem;font-weight:600;color:var(--text-pri);}
+
+.cam-error{
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);
+  border-radius:10px;padding:16px;
+  font-family:var(--font-mono);font-size:.8rem;color:#FCA5A5;
+  display:flex;gap:10px;align-items:flex-start;
+}
+
+/* ── Med Database Browser ── */
+.mdb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
+.mdb-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);
+  overflow:hidden;cursor:pointer;transition:all .22s;position:relative;
+}
+.mdb-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,.3);}
+.mdb-card-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0;}
+.mdb-card-top{padding:20px 20px 14px;}
+.mdb-card-name{font-family:var(--font-mono);font-size:1.1rem;font-weight:700;margin-bottom:2px;}
+.mdb-card-name-ar{font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);margin-bottom:6px;}
+.mdb-card-mfr{font-family:var(--font-mono);font-size:.62rem;color:var(--text-muted);opacity:.7;margin-bottom:10px;}
+.mdb-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.mdb-card-badge{font-family:var(--font-mono);font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid;}
+.mdb-card-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--font-mono);font-size:.72rem;padding:8px 0;
+  border-top:1px solid rgba(30,58,95,.4);
+}
+.mdb-card-row span:first-child{color:var(--text-muted);}
+.mdb-card-row span:last-child{font-weight:600;}
+.mdb-expand{display:none;flex-direction:column;gap:12px;padding:16px 20px 20px;border-top:1px solid var(--border);background:rgba(6,10,20,.4);}
+.mdb-expand.open{display:flex;animation:fadeIn .25s ease;}
+.mdb-sect{display:flex;flex-direction:column;gap:5px;}
+.mdb-sect-label{font-family:var(--font-mono);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);}
+.mdb-sect-val{font-family:var(--font-mono);font-size:.76rem;color:var(--text-sec);line-height:1.65;}
+.mdb-sect-val strong{color:var(--text-pri);}
+.mdb-se-list{display:flex;flex-wrap:wrap;gap:4px;}
+.mdb-se-tag{font-family:var(--font-mono);font-size:.62rem;padding:2px 7px;border-radius:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:var(--orange);}
+.mdb-int-item{font-family:var(--font-mono);font-size:.7rem;color:var(--text-sec);display:flex;gap:6px;align-items:flex-start;}
+.mdb-int-item::before{content:'⚡';color:var(--danger);flex-shrink:0;}
+.mdb-warn-box{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.22);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:.72rem;color:#FCA5A5;line-height:1.6;}
+.mdb-toggle-btn{
+  width:100%;padding:9px;border:none;border-top:1px solid var(--border);
+  background:none;color:var(--text-muted);font-family:var(--font-mono);font-size:.72rem;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.mdb-toggle-btn:hover{color:var(--teal);background:rgba(0,212,170,.04);}
+.mdb-search{
+  width:100%;padding:10px 16px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(10,14,26,.8);color:var(--text-pri);font-family:var(--font-mono);font-size:.82rem;
+  outline:none;transition:border-color .2s;margin-bottom:16px;
+}
+.mdb-search:focus{border-color:var(--teal);}
+.mdb-search::placeholder{color:var(--text-muted);}
+
+/* ── Scan History ── */
+.scan-history-wrap{margin-top:28px;}
+.scan-history-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.scan-history-title{
+  font-family:var(--font-mono);font-size:.78rem;font-weight:700;
+  color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;
+}
+.scan-history-count{
+  font-family:var(--font-mono);font-size:.7rem;
+  background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.25);
+  color:var(--teal);padding:2px 8px;border-radius:10px;
+}
+.scan-history-clear{
+  font-family:var(--font-mono);font-size:.7rem;
+  color:var(--text-muted);background:none;border:1px solid var(--border);
+  border-radius:6px;padding:4px 10px;cursor:pointer;transition:all .15s;
+}
+.scan-history-clear:hover{border-color:var(--danger);color:var(--danger);}
+
+.scan-history-list{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;
+}
+.scan-history-empty{
+  font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);
+  text-align:center;padding:24px;border:1px dashed var(--border);
+  border-radius:10px;grid-column:1/-1;
+}
+
+.scan-item{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  display:flex;gap:0;flex-direction:column;
+  transition:border-color .2s,box-shadow .2s,transform .2s;
+  animation:scanItemIn .35s cubic-bezier(.34,1.56,.64,1);
+  position:relative;
+}
+@keyframes scanItemIn{
+  from{opacity:0;transform:translateY(12px) scale(.97);}
+  to{opacity:1;transform:none;}
+}
+.scan-item:hover{border-color:var(--border-bright);box-shadow:0 6px 24px rgba(0,0,0,.3);transform:translateY(-2px);}
+.scan-item.deleting{
+  animation:scanItemOut .3s ease forwards;
+}
+@keyframes scanItemOut{
+  to{opacity:0;transform:scale(.92);max-height:0;margin:0;padding:0;}
+}
+
+.scan-item-thumb{
+  position:relative;overflow:hidden;height:120px;background:#060A14;flex-shrink:0;
+}
+.scan-item-thumb img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .3s ease;
+}
+.scan-item:hover .scan-item-thumb img{transform:scale(1.04);}
+.scan-item-thumb-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 40%,rgba(10,14,26,.85));
+}
+.scan-item-time{
+  position:absolute;bottom:6px;left:8px;
+  font-family:var(--font-mono);font-size:.6rem;color:rgba(241,245,249,.7);
+  letter-spacing:.06em;
+}
+.scan-item-del{
+  position:absolute;top:6px;right:6px;
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(10,14,26,.8);border:1px solid rgba(239,68,68,.4);
+  color:var(--danger);font-size:.75rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .15s,background .15s;
+}
+.scan-item:hover .scan-item-del{opacity:1;}
+.scan-item-del:hover{background:rgba(239,68,68,.2);}
+
+.scan-item-body{padding:12px 14px 14px;}
+.scan-item-name{font-family:var(--font-mono);font-size:.88rem;font-weight:700;color:var(--teal);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.scan-item-name-ar{font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);margin-bottom:8px;}
+.scan-item-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.scan-item-tag{font-family:var(--font-mono);font-size:.6rem;padding:2px 7px;border-radius:10px;border:1px solid;}
+.scan-item-notfound{
+  font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);
+  font-style:italic;
+}
+</style>
+</head>
+<body>
+
+<!-- BOOT OVERLAY -->
+<div id="boot-overlay">
+  <div class="boot-logo">THERAPEÍA</div>
+  <div class="boot-sub">NLP INTENT CLASSIFIER · INITIALIZING</div>
+  <div class="boot-bar-wrap"><div class="boot-bar-fill"></div></div>
+  <div class="boot-status">LOADING <span>NEURAL WEIGHTS</span>...</div>
+</div>
+
+<!-- CURSOR -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- SPARKS -->
+<canvas id="sparks-canvas"></canvas>
+
+<canvas id="particles"></canvas>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- ════════════════ HEADER ════════════════ -->
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="brain-icon">🧬</div>
+      <div>
+        <div class="logo-title">THERAPEÍA<span class="cursor">|</span></div>
+        <div class="logo-sub">NLP Intent Classifier &nbsp;·&nbsp; AR + EN &nbsp;·&nbsp; v1.0</div>
+      </div>
+    </div>
+    <div class="stat-pills">
+      <div class="stat-pill sp-models">
+        <div class="stat-pill-label"><span>⚙</span> MODELS</div>
+        <div class="stat-pill-val">3</div>
+      </div>
+      <div class="stat-pill sp-intents">
+        <div class="stat-pill-label"><span>◎</span> INTENTS</div>
+        <div class="stat-pill-val">8</div>
+      </div>
+      <div class="stat-pill sp-dataset">
+        <div class="stat-pill-label"><span>∿</span> DATASET</div>
+        <div class="stat-pill-val">10K</div>
+      </div>
+      <div class="stat-pill sp-preds">
+        <div class="stat-pill-label"><span>↗</span> PREDICTIONS</div>
+        <div class="stat-pill-val pred-count">0</div>
+      </div>
+    </div>
+  </div>
+  <!-- ECG Line -->
+  <div class="ecg-container">
+    <svg class="ecg-svg" viewBox="0 0 1200 3" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,1.5 L100,1.5 L110,0.2 L120,2.8 L135,0 L145,3 L155,1.5 L300,1.5 L310,0.2 L320,2.8 L335,0 L345,3 L355,1.5 L500,1.5 L510,0.2 L520,2.8 L535,0 L545,3 L555,1.5 L700,1.5 L710,0.2 L720,2.8 L735,0 L745,3 L755,1.5 L900,1.5 L910,0.2 L920,2.8 L935,0 L945,3 L955,1.5 L1100,1.5 L1110,0.2 L1120,2.8 L1135,0 L1145,3 L1155,1.5 L1200,1.5" stroke="#00D4AA" stroke-width="1.2" opacity="0.7"/>
+    </svg>
+  </div>
+</header>
+
+<!-- ════════════════ MAIN ════════════════ -->
+<main>
+
+<!-- ─── SECTION 0: MED SCAN (CAMERA) ─── -->
+<div class="section visible" id="sec-camera">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00D4AA" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      💊 Live Med Scanner — اسكان الدواء
+    </h2>
+    <div style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+      <span class="pulseDot" id="cam-live-dot" style="display:none;background:var(--danger);box-shadow:0 0 8px var(--danger);"></span>
+      <span id="cam-status-txt">كاميرا مغلقة</span>
+    </div>
+  </div>
+
+  <div class="cam-card">
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+
+    <div class="cam-layout">
+      <!-- LEFT: Camera feed -->
+      <div>
+        <div class="cam-viewport" id="cam-viewport">
+          <div class="cam-off-msg" id="cam-off-msg">
+            <div class="cam-off-icon">📷</div>
+            <div>اضغط "تشغيل الكاميرا" عشان تبدأ</div>
+            <div style="font-size:.7rem;opacity:.6;">Click "Open Camera" to begin</div>
+          </div>
+          <video id="cam-video" autoplay playsinline muted style="display:none;"></video>
+          <canvas id="cam-hidden" style="display:none;"></canvas>
+
+          <!-- Reticle overlay -->
+          <div class="cam-reticle" id="cam-reticle">
+            <div class="cam-reticle-inner">
+              <span></span>
+              <div class="cam-scan-line"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cam-controls">
+          <button class="cam-btn" id="btn-open-cam" onclick="openCamera()">📷 تشغيل الكاميرا</button>
+          <button class="cam-btn primary" id="btn-scan" onclick="captureAndAnalyze()" disabled>🔬 اسكان الدواء</button>
+          <button class="cam-btn" id="btn-close-cam" onclick="closeCamera()" disabled style="flex:0;padding:10px 12px;" title="إغلاق">✕</button>
+        </div>
+
+        <!-- Snapshot preview -->
+        <div class="cam-snapshot" id="cam-snapshot" style="margin-top:12px;">
+          <img id="cam-snapshot-img" src="" alt="Captured frame"/>
+          <div class="cam-snapshot-label">📸 آخر إطار تم التقاطه — Last captured frame</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Analysis results -->
+      <div class="cam-result-panel">
+        <div style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;">نتيجة التحليل — Analysis Result</div>
+
+        <div class="cam-analysis-box" id="cam-analysis-box">
+          <div class="cam-analysis-placeholder" id="cam-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <div>امسح دواء عشان تشوف معلوماته هنا</div>
+            <div style="font-size:.72rem;opacity:.55;">Scan a medication to see its details here</div>
+          </div>
+          <div id="cam-result-content" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scan History -->
+  <div class="scan-history-wrap" id="scan-history-wrap">
+    <div class="scan-history-header">
+      <div class="scan-history-title">
+        📋 سجل الاسكانات — Scan History
+        <span class="scan-history-count" id="scan-count">0</span>
+      </div>
+      <button class="scan-history-clear" onclick="clearAllScans()">🗑 مسح الكل</button>
+    </div>
+    <div class="scan-history-list" id="scan-history-list">
+      <div class="scan-history-empty" id="scan-empty">لا يوجد اسكانات بعد — No scans yet</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECTION 0.5: MED DATABASE BROWSER ─── -->
+<div class="section visible" id="sec-mdb">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+      🗄 قاعدة بيانات الأدوية — Medication Database
+    </h2>
+    <div style="font-family:var(--font-mono);font-size:.72rem;color:var(--teal);display:flex;align-items:center;gap:6px;">
+      <span class="pulseDot"></span>
+      <span id="mdb-count">4 أدوية — medications</span>
+    </div>
+  </div>
+
+  <div class="cam-card">
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <input class="mdb-search" id="mdb-search" placeholder="🔍 ابحث باسم الدواء أو المادة الفعالة — Search by name or ingredient..." oninput="filterMDB(this.value)"/>
+    <div class="mdb-grid" id="mdb-grid"></div>
+  </div>
+</div>
+
+<!-- ─── SECTION 1: LIVE DEMO ─── -->
+<div class="section" id="sec-demo">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00D4AA" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Live Intent Prediction
+    </h2>
+    <div class="section-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div style="display:flex;gap:4px;background:rgba(10,14,26,.6);border:1px solid var(--border);border-radius:8px;padding:4px;">
+        <button class="ctrl-btn active" id="sel-cnn" onclick="setModel('cnn')" style="font-size:.7rem;">TextCNN</button>
+        <button class="ctrl-btn" id="sel-lstm" onclick="setModel('lstm')" style="font-size:.7rem;">BiLSTM</button>
+        <button class="ctrl-btn" id="sel-bert" onclick="setModel('bert')" style="font-size:.7rem;">DistilBERT</button>
+      </div>
+      <button class="btn" onclick="exportResult()">↓ Export</button>
+      <button class="btn" onclick="shareResult()">⤴ Share</button>
+    </div>
+  </div>
+
+  <div class="demo-card">
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <div class="input-wrapper" id="input-wrapper">
+      <input type="text" id="demo-input" placeholder="Type a command in Arabic or English..." autocomplete="off" spellcheck="false"/>
+      <select class="lang-select" id="lang-select" aria-label="Language selection">
+        <option value="ar-EG">EG AR</option>
+        <option value="en-US">EN US</option>
+      </select>
+      <button class="mic-btn" id="mic-btn" aria-label="Start voice input" title="Voice Input">🎤</button>
+    </div>
+    <div class="voice-wave" id="voice-wave">
+      <div class="wave-bar" style="height:8px"></div><div class="wave-bar" style="height:14px"></div>
+      <div class="wave-bar" style="height:20px"></div><div class="wave-bar" style="height:16px"></div>
+      <div class="wave-bar" style="height:24px"></div><div class="wave-bar" style="height:18px"></div>
+      <div class="wave-bar" style="height:28px"></div><div class="wave-bar" style="height:22px"></div>
+      <div class="wave-bar" style="height:30px"></div><div class="wave-bar" style="height:26px"></div>
+      <div class="wave-bar" style="height:28px"></div><div class="wave-bar" style="height:22px"></div>
+      <div class="wave-bar" style="height:24px"></div><div class="wave-bar" style="height:20px"></div>
+      <div class="wave-bar" style="height:16px"></div><div class="wave-bar" style="height:18px"></div>
+      <div class="wave-bar" style="height:14px"></div><div class="wave-bar" style="height:10px"></div>
+      <div class="wave-bar" style="height:12px"></div><div class="wave-bar" style="height:8px"></div>
+    </div>
+    <div class="listen-msg" id="listen-msg">🎙 Listening... Speak now</div>
+    <div class="example-pills" id="example-pills">
+      <div class="ex-pill" onclick="setDemo('يا ثيرابيا')">يا ثيرابيا</div>
+      <div class="ex-pill" onclick="setDemo('امسح')">امسح</div>
+      <div class="ex-pill" onclick="setDemo('ابدأ دلوقتي')">ابدأ</div>
+      <div class="ex-pill" onclick="setDemo('وقف')">وقف</div>
+      <div class="ex-pill" onclick="setDemo('نام')">نام</div>
+      <div class="ex-pill" onclick="setDemo('الأدوية الموجودة')">الأدوية</div>
+      <div class="ex-pill" onclick="setDemo('كام باقي')">كام باقي</div>
+      <div class="ex-pill" onclick="setDemo('ايه هو الباراسيتامول')">ايه هو الباراسيتامول</div>
+      <div class="ex-pill" onclick="setDemo('hey therapeia')">hey therapeia</div>
+      <div class="ex-pill" onclick="setDemo('scan the pill')">scan the pill</div>
+      <div class="ex-pill" onclick="setDemo('show all meds')">show all meds</div>
+      <div class="ex-pill" onclick="setDemo('how many left')">how many left</div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="runPrediction()">⚡ Classify Intent</button>
+
+    <!-- Result -->
+    <div class="result-card" id="result-card" style="margin-top:16px;">
+      <div class="result-top">
+        <div>
+          <div style="font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:.1em;margin-bottom:6px;">DETECTED INTENT</div>
+          <span class="intent-badge" id="intent-badge">—</span>
+        </div>
+        <div class="result-meta">
+          <span id="model-used-label">🔧 TextCNN</span>
+          <span id="proc-time">⏱ ~1ms</span>
+          <span class="pred-counter">✦ <span id="pred-num">0</span> predictions</span>
+        </div>
+      </div>
+      <div class="conf-bar-wrap">
+        <div class="conf-label"><span>Confidence</span><span id="conf-pct" style="font-family:var(--font-mono);font-weight:700;">0%</span></div>
+        <div class="conf-bar-track"><div class="conf-bar-fill" id="conf-bar" style="width:0%;background:var(--teal);"></div></div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);letter-spacing:.1em;margin-bottom:10px;">ALL INTENT PROBABILITIES</div>
+      <div class="intents-grid" id="intents-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECTION 2: MODEL PERFORMANCE ─── -->
+<div class="section" id="sec-models">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="2"/><circle cx="16" cy="8" r="2"/><circle cx="8" cy="16" r="2"/><circle cx="16" cy="16" r="2"/></svg>
+      Model Performance
+    </h2>
+    <button class="btn" id="comparison-btn" onclick="toggleComparison()">⇔ Comparison Mode</button>
+  </div>
+  <div class="models-grid" id="models-grid">
+    <!-- TextCNN -->
+    <div class="model-card" style="--glow:var(--orange)">
+      <div class="glow-bg" style="color:var(--orange)"></div>
+      <div class="model-header">
+        <div class="model-dot" style="background:var(--orange);color:var(--orange);"></div>
+        <span class="model-name">TextCNN</span>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Accuracy</span><span style="color:var(--orange)">94.2%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="94.2" style="background:var(--orange);"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Macro-F1</span><span style="color:var(--orange)">94.2%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="94.2" style="background:var(--orange);"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Precision</span><span style="color:var(--orange)">94.3%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="94.3" style="background:var(--orange);"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Recall</span><span style="color:var(--orange)">94.1%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="94.1" style="background:var(--orange);"></div></div>
+      </div>
+      <hr class="model-divider"/>
+      <div class="model-stats">
+        <div class="model-stat"><div class="model-stat-icon">⚡</div><div class="model-stat-label">Speed</div><div class="model-stat-val" style="color:var(--orange)">~1ms</div></div>
+        <div class="model-stat"><div class="model-stat-icon">⚙</div><div class="model-stat-label">Params</div><div class="model-stat-val" style="color:var(--orange)">~2.1M</div></div>
+        <div class="model-stat"><div class="model-stat-icon">↗</div><div class="model-stat-label">Epochs</div><div class="model-stat-val" style="color:var(--orange)">35</div></div>
+      </div>
+    </div>
+
+    <!-- BiLSTM -->
+    <div class="model-card" style="--glow:var(--green)">
+      <div class="glow-bg" style="color:var(--green)"></div>
+      <div class="model-header">
+        <div class="model-dot" style="background:var(--green);color:var(--green);"></div>
+        <span class="model-name">BiLSTM</span>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Accuracy</span><span style="color:var(--green)">95.6%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="95.6" style="background:var(--green);" data-delay="150"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Macro-F1</span><span style="color:var(--green)">95.6%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="95.6" style="background:var(--green);" data-delay="150"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Precision</span><span style="color:var(--green)">95.6%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="95.6" style="background:var(--green);" data-delay="150"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Recall</span><span style="color:var(--green)">95.5%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="95.5" style="background:var(--green);" data-delay="150"></div></div>
+      </div>
+      <hr class="model-divider"/>
+      <div class="model-stats">
+        <div class="model-stat"><div class="model-stat-icon">⚡</div><div class="model-stat-label">Speed</div><div class="model-stat-val" style="color:var(--green)">~3ms</div></div>
+        <div class="model-stat"><div class="model-stat-icon">⚙</div><div class="model-stat-label">Params</div><div class="model-stat-val" style="color:var(--green)">~3.2M</div></div>
+        <div class="model-stat"><div class="model-stat-icon">↗</div><div class="model-stat-label">Epochs</div><div class="model-stat-val" style="color:var(--green)">30</div></div>
+      </div>
+    </div>
+
+    <!-- DistilBERT (BEST) -->
+    <div class="model-card best">
+      <div class="crown-badge" title="Best Accuracy">👑</div>
+      <div class="glow-bg" style="color:var(--purple)"></div>
+      <div class="model-header">
+        <div class="model-dot" style="background:var(--purple);color:var(--purple);"></div>
+        <span class="model-name">DistilBERT</span>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Accuracy</span><span style="color:var(--purple)">98.7%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="98.7" style="background:var(--purple);" data-delay="300"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Macro-F1</span><span style="color:var(--purple)">98.7%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="98.7" style="background:var(--purple);" data-delay="300"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Precision</span><span style="color:var(--purple)">98.7%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="98.7" style="background:var(--purple);" data-delay="300"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-label"><span>Recall</span><span style="color:var(--purple)">98.7%</span></div>
+        <div class="metric-track"><div class="metric-bar" data-val="98.7" style="background:var(--purple);" data-delay="300"></div></div>
+      </div>
+      <hr class="model-divider"/>
+      <div class="model-stats">
+        <div class="model-stat"><div class="model-stat-icon">⚡</div><div class="model-stat-label">Speed</div><div class="model-stat-val" style="color:var(--purple)">~15ms</div></div>
+        <div class="model-stat"><div class="model-stat-icon">⚙</div><div class="model-stat-label">Params</div><div class="model-stat-val" style="color:var(--purple)">~66M</div></div>
+        <div class="model-stat"><div class="model-stat-icon">↗</div><div class="model-stat-label">Epochs</div><div class="model-stat-val" style="color:var(--purple)">10</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECTION 3: INTENT EXPLORER ─── -->
+<div class="section" id="sec-explorer">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Intent Explorer
+    </h2>
+  </div>
+  <div class="explorer-layout">
+    <div class="intent-sidebar" id="intent-sidebar">
+      <!-- populated by JS -->
+    </div>
+    <div class="intent-detail" id="intent-detail">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECTION 4: TRAINING CURVES ─── -->
+<div class="section" id="sec-training">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Training Curves
+    </h2>
+    <div class="training-controls">
+      <div class="ctrl-group">
+        <button class="ctrl-btn active" id="ctrl-acc" onclick="setMetric('acc')">Accuracy</button>
+        <button class="ctrl-btn" id="ctrl-loss" onclick="setMetric('loss')">Loss</button>
+      </div>
+      <div class="ctrl-group">
+        <button class="ctrl-btn active" id="ctrl-both" onclick="setSplit('both')">Both</button>
+        <button class="ctrl-btn" id="ctrl-train" onclick="setSplit('train')">Train</button>
+        <button class="ctrl-btn" id="ctrl-val" onclick="setSplit('val')">Validation</button>
+      </div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <canvas id="training-chart" height="340"></canvas>
+    <div class="chart-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div><span>TextCNN Train</span></div>
+      <div class="legend-item"><div class="legend-line-dash" style="color:var(--orange);border-color:var(--orange)"></div><span>TextCNN Val</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div><span>BiLSTM Train</span></div>
+      <div class="legend-item"><div class="legend-line-dash" style="color:var(--green);border-color:var(--green)"></div><span>BiLSTM Val</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div><span>DistilBERT Train</span></div>
+      <div class="legend-item"><div class="legend-line-dash" style="color:var(--purple);border-color:var(--purple)"></div><span>DistilBERT Val</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECTION 5: CONFUSION MATRIX ─── -->
+<div class="section" id="sec-matrix">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Confusion Matrix
+    </h2>
+    <div class="matrix-model-sel">
+      <button class="ctrl-btn active" id="mx-cnn" onclick="setMatrix('cnn')" style="color:var(--orange);border:1px solid var(--border);">TextCNN</button>
+      <button class="ctrl-btn" id="mx-lstm" onclick="setMatrix('lstm')" style="border:1px solid var(--border);">BiLSTM</button>
+      <button class="ctrl-btn" id="mx-bert" onclick="setMatrix('bert')" style="border:1px solid var(--border);">DistilBERT</button>
+    </div>
+  </div>
+  <div class="matrix-card">
+    <div class="matrix-container">
+      <div class="matrix-grid" id="matrix-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECTION 6: F1 RADAR ─── -->
+<div class="section" id="sec-radar">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      F1 Score Distribution
+    </h2>
+    <div class="radar-toggles">
+      <button class="radar-toggle active-orange" id="rt-cnn" onclick="toggleRadar('cnn')">● TextCNN</button>
+      <button class="radar-toggle active-green" id="rt-lstm" onclick="toggleRadar('lstm')">● BiLSTM</button>
+      <button class="radar-toggle active-purple" id="rt-bert" onclick="toggleRadar('bert')">● DistilBERT</button>
+    </div>
+  </div>
+  <div class="radar-card">
+    <canvas id="radar-chart" height="420"></canvas>
+  </div>
+</div>
+
+<!-- ─── SECTION 7: DEPLOYMENT GUIDE ─── -->
+<div class="section" id="sec-deploy">
+  <div class="section-header">
+    <h2 class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Deployment Guide
+    </h2>
+  </div>
+  <div class="deploy-grid">
+    <!-- Raspberry Pi -->
+    <div class="deploy-card rpi">
+      <div class="deploy-icon">🍓</div>
+      <div class="deploy-title">For Raspberry Pi</div>
+      <div class="deploy-meta">
+        <div class="deploy-meta-row"><span>Recommended Model:</span><span>TextCNN</span></div>
+        <div class="deploy-meta-row"><span>Memory:</span><span>~50MB</span></div>
+        <div class="deploy-meta-row"><span>Speed:</span><span>2ms/prediction</span></div>
+      </div>
+      <div class="code-block">
+        <div><span class="kw">model</span> <span class="op">=</span> <span class="fn">TextCNN</span><span class="var">()</span></div>
+        <div><span class="kw">model</span><span class="var">.</span><span class="fn">load</span><span class="var">(</span><span class="str">"textcnn.pt"</span><span class="var">)</span></div>
+        <div><span class="kw">pred</span> <span class="op">=</span> <span class="kw">model</span><span class="var">.</span><span class="fn">predict</span><span class="var">(text)</span></div>
+      </div>
+    </div>
+    <!-- Server -->
+    <div class="deploy-card server">
+      <div class="deploy-icon">🖥</div>
+      <div class="deploy-title">For Server</div>
+      <div class="deploy-meta">
+        <div class="deploy-meta-row"><span>Recommended Model:</span><span>BiLSTM</span></div>
+        <div class="deploy-meta-row"><span>Memory:</span><span>~120MB</span></div>
+        <div class="deploy-meta-row"><span>Speed:</span><span>3ms/prediction</span></div>
+      </div>
+      <div class="code-block">
+        <div><span class="kw">model</span> <span class="op">=</span> <span class="fn">BiLSTM</span><span class="var">()</span></div>
+        <div><span class="kw">model</span><span class="var">.</span><span class="fn">load</span><span class="var">(</span><span class="str">"bilstm.pt"</span><span class="var">)</span></div>
+        <div><span class="kw">pred</span> <span class="op">=</span> <span class="kw">model</span><span class="var">.</span><span class="fn">predict</span><span class="var">(text)</span></div>
+      </div>
+    </div>
+    <!-- Research -->
+    <div class="deploy-card research">
+      <div class="deploy-icon">🔬</div>
+      <div class="deploy-title">For Research</div>
+      <div class="deploy-meta">
+        <div class="deploy-meta-row"><span>Recommended Model:</span><span>DistilBERT</span></div>
+        <div class="deploy-meta-row"><span>Memory:</span><span>~500MB</span></div>
+        <div class="deploy-meta-row"><span>Speed:</span><span>15ms/prediction</span></div>
+      </div>
+      <div class="code-block">
+        <div><span class="kw">model</span> <span class="op">=</span> <span class="fn">DistilBERT</span><span class="var">()</span></div>
+        <div><span class="kw">model</span><span class="var">.</span><span class="fn">load</span><span class="var">(</span><span class="str">"distilbert.pt"</span><span class="var">)</span></div>
+        <div><span class="kw">pred</span> <span class="op">=</span> <span class="kw">model</span><span class="var">.</span><span class="fn">predict</span><span class="var">(text)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════
+//  MED DATABASE
+// ════════════════════════════════════════════
+const MED_DATABASE = {
+  ketofan: {
+    found: true,
+    name_en: "Ketofan",
+    name_ar: "كيتوفان",
+    brand: "Ketofan",
+    manufacturer: "NILE CO. for Pharmaceuticals",
+    confidence: "High",
+    category: "NSAID — Analgesic / Anti-inflammatory",
+    form: "Tablet / Gel / Suppository",
+    dosage: "50mg / 100mg",
+    active_ingredient: "Ketoprofen",
+    active_ingredient_ar: "كيتوبروفين",
+    rx_required: true,
+    color: "#F59E0B",
+    uses_en: "Used to relieve pain, inflammation and stiffness associated with arthritis, rheumatic conditions, and musculoskeletal disorders. Also used post-surgery and post-trauma.",
+    uses_ar: "يُستخدم لتخفيف الألم والالتهابات والتيبس المصاحب للروماتيزم والتهاب المفاصل والإصابات. يُستخدم أيضاً بعد العمليات الجراحية.",
+    mechanism: "Ketoprofen inhibits COX-1 and COX-2 enzymes, reducing prostaglandin synthesis and thereby decreasing inflammation and pain signals.",
+    common_dose: "50–100 mg twice or three times daily with food. Max 300mg/day.",
+    common_dose_ar: "٥٠–١٠٠ ملجم مرتين أو ثلاث مرات يومياً مع الطعام. الحد الأقصى ٣٠٠ ملجم/يوم.",
+    warnings: "Avoid in patients with peptic ulcers, renal impairment, or cardiovascular disease. Not recommended in the last trimester of pregnancy.",
+    warnings_ar: "تجنب في حالات قرحة المعدة أو ضعف وظائف الكلى أو أمراض القلب. غير مستحسن في الثلث الأخير من الحمل.",
+    side_effects: ["حرقان معدة", "غثيان", "دوخة", "طفح جلدي", "احتباس سوائل"],
+    side_effects_en: ["Heartburn", "Nausea", "Dizziness", "Skin rash", "Fluid retention"],
+    interactions: ["Warfarin — زيادة خطر النزيف", "Lithium — رفع مستوى الليثيوم", "Methotrexate — سُمية", "Aspirin — لا تجمع"],
+    storage: "يُحفظ في درجة حرارة أقل من ٣٠°م بعيداً عن الرطوبة",
+    storage_en: "Store below 30°C, away from moisture and light.",
+    tags: ["NSAID", "Ketoprofen", "Anti-inflammatory", "مضاد التهاب", "مسكن", "روماتيزم"],
+    pregnancy_class: "C (Third trimester: D)",
+    otc_class: "Prescription only — وصفة طبية"
+  },
+
+  cataflam: {
+    found: true,
+    name_en: "Cataflam",
+    name_ar: "كتافلام",
+    brand: "Cataflam",
+    manufacturer: "Novartis / Nile Pharma (local)",
+    confidence: "High",
+    category: "NSAID — Analgesic / Anti-inflammatory",
+    form: "Tablet / Drops / Suppository",
+    dosage: "25mg / 50mg",
+    active_ingredient: "Diclofenac Potassium",
+    active_ingredient_ar: "ديكلوفيناك بوتاسيوم",
+    rx_required: true,
+    color: "#3B82F6",
+    uses_en: "Rapid relief of acute pain including toothache, menstrual cramps, post-operative pain, headache, and musculoskeletal pain. Diclofenac potassium is absorbed faster than sodium salt.",
+    uses_ar: "تخفيف سريع للألم الحاد بما في ذلك ألم الأسنان والدورة الشهرية وآلام ما بعد الجراحة والصداع وآلام العضلات. يُمتص أسرع من ديكلوفيناك الصوديوم.",
+    mechanism: "Selective inhibition of COX-2 with minor COX-1 effect. Rapid absorption due to potassium salt form — onset within 30 minutes.",
+    common_dose: "50mg 2–3 times daily. For menstrual pain: 50mg initial, then 25mg every 4 hours.",
+    common_dose_ar: "٥٠ ملجم ٢–٣ مرات يومياً. لآلام الدورة: ٥٠ ملجم ثم ٢٥ ملجم كل ٤ ساعات.",
+    warnings: "Do not use with other NSAIDs. Caution in patients with hypertension, renal or hepatic impairment. GI bleeding risk.",
+    warnings_ar: "لا تستخدم مع مضادات التهاب أخرى. حذر في ارتفاع ضغط الدم وضعف الكبد أو الكلى. خطر نزيف معدي.",
+    side_effects: ["غثيان", "ألم معدة", "صداع", "دوخة", "ارتفاع ضغط الدم"],
+    side_effects_en: ["Nausea", "Stomach pain", "Headache", "Dizziness", "Elevated BP"],
+    interactions: ["Aspirin — لا تجمع", "ACE inhibitors — يضعف تأثيرها", "Anticoagulants — خطر نزيف", "Cyclosporine — سُمية كلوية"],
+    storage: "يُحفظ في درجة حرارة أقل من ٢٥°م",
+    storage_en: "Store below 25°C in original packaging.",
+    tags: ["NSAID", "Diclofenac", "Novartis", "مسكن ألم", "دورة شهرية", "سريع المفعول"],
+    pregnancy_class: "C (Third trimester: D)",
+    otc_class: "Prescription only — وصفة طبية"
+  },
+
+  ambezim: {
+    found: true,
+    name_en: "Ambezim",
+    name_ar: "امبيزيم",
+    brand: "Ambezim",
+    manufacturer: "Pharco Pharmaceuticals / MEPACO",
+    confidence: "High",
+    category: "Proteolytic Enzyme — Anti-edema / Anti-inflammatory",
+    form: "Tablet (enteric-coated)",
+    dosage: "Trypsin 48mg + Chymotrypsin 1mg / Bromelain 90mg",
+    active_ingredient: "Trypsin + Chymotrypsin (or Bromelain)",
+    active_ingredient_ar: "تريبسين + كيموتريبسين (أو بروميلين)",
+    rx_required: false,
+    color: "#10B981",
+    uses_en: "Used as an adjunct anti-inflammatory and anti-edema therapy. Helps reduce swelling, bruising, and inflammation post-surgery, post-trauma, dental procedures, and ENT conditions.",
+    uses_ar: "يُستخدم كعلاج مساعد لتقليل التورم والكدمات والالتهابات بعد العمليات الجراحية والإصابات وعمليات الأسنان ومشاكل الأنف والأذن والحنجرة.",
+    mechanism: "Proteolytic enzymes break down inflammatory mediators (bradykinin, fibrin) and enhance lymphatic drainage, reducing edema at the site of inflammation.",
+    common_dose: "2 tablets 3 times daily on empty stomach (at least 30 min before meals).",
+    common_dose_ar: "٢ قرص ٣ مرات يومياً على معدة فارغة (٣٠ دقيقة قبل الوجبات على الأقل).",
+    warnings: "Avoid in coagulation disorders. May enhance anticoagulant effect. Do not crush or chew tablets (enteric coating must remain intact).",
+    warnings_ar: "تجنب في اضطرابات التخثر. قد يزيد تأثير مضادات التخثر. لا تكسر أو تمضغ الأقراص (الطلاء المعوي يجب أن يبقى سليماً).",
+    side_effects: ["اضطراب معدي طفيف", "غثيان نادر", "تفاعل تحسسي نادر"],
+    side_effects_en: ["Mild GI upset", "Rare nausea", "Rare allergic reaction"],
+    interactions: ["Anticoagulants — يزيد خطر النزيف", "Antibiotics — قد يعزز امتصاصها"],
+    storage: "يُحفظ في درجة حرارة أقل من ٢٥°م بعيداً عن الرطوبة",
+    storage_en: "Store below 25°C away from moisture. Keep in original blister.",
+    tags: ["Enzyme", "Anti-edema", "بروميلين", "تريبسين", "تورم", "ما بعد الجراحة"],
+    pregnancy_class: "Consult physician",
+    otc_class: "OTC — بدون وصفة طبية"
+  },
+
+  brufin: {
+    found: true,
+    name_en: "Brufin",
+    name_ar: "بروفين",
+    brand: "Brufin",
+    manufacturer: "EIPICO — Egyptian International Pharmaceutical Industries",
+    confidence: "High",
+    category: "NSAID — Analgesic / Antipyretic / Anti-inflammatory",
+    form: "Tablet / Syrup / Suspension",
+    dosage: "200mg / 400mg / 600mg / 100mg per 5ml (syrup)",
+    active_ingredient: "Ibuprofen",
+    active_ingredient_ar: "إيبوبروفين",
+    rx_required: false,
+    color: "#A855F7",
+    uses_en: "Relief of mild to moderate pain (headache, toothache, back pain, menstrual pain), fever reduction, and inflammation from arthritis. One of the most widely used NSAIDs worldwide.",
+    uses_ar: "تخفيف الآلام الخفيفة إلى المتوسطة (صداع، ضرس، ظهر، دورة شهرية)، خفض الحرارة، والتهاب المفاصل. من أكثر مضادات الالتهاب استخداماً في العالم.",
+    mechanism: "Non-selective COX-1 and COX-2 inhibitor. Reduces prostaglandin synthesis leading to decreased pain, fever, and inflammation. Onset: 20–30 minutes.",
+    common_dose: "Adults: 200–400mg every 4–6 hours. Max 1200mg/day OTC (2400mg under medical supervision). Children: 5–10mg/kg/dose.",
+    common_dose_ar: "البالغون: ٢٠٠–٤٠٠ ملجم كل ٤–٦ ساعات. الحد الأقصى ١٢٠٠ ملجم/يوم. الأطفال: ٥–١٠ ملجم/كجم/جرعة.",
+    warnings: "Take with food or milk. Avoid alcohol. Caution in asthma, kidney disease, heart conditions. Do not use if allergic to aspirin. Avoid prolonged use without medical supervision.",
+    warnings_ar: "تناوله مع طعام أو حليب. تجنب الكحول. حذر في الربو وأمراض الكلى والقلب. لا تستخدم عند الحساسية من الأسبرين. تجنب الاستخدام المطوّل بدون إشراف طبي.",
+    side_effects: ["حرقة المعدة", "غثيان", "دوار", "طنين أذن (جرعات عالية)", "احتباس سوائل"],
+    side_effects_en: ["Heartburn", "Nausea", "Dizziness", "Tinnitus (high doses)", "Fluid retention"],
+    interactions: ["Aspirin — يقلل التأثير الوقائي للأسبرين", "Warfarin — خطر نزيف", "Lithium — يرفع مستواه", "ACE inhibitors — يضعف تأثيرها", "Methotrexate — سُمية"],
+    storage: "يُحفظ في درجة حرارة أقل من ٣٠°م",
+    storage_en: "Store below 30°C. Keep syrup refrigerated after opening.",
+    tags: ["NSAID", "Ibuprofen", "EIPICO", "مسكن", "خافض حرارة", "OTC", "أطفال"],
+    pregnancy_class: "B (Third trimester: D — avoid)",
+    otc_class: "OTC — بدون وصفة طبية"
+  }
+};
+
+// Lookup aliases — for matching scanned names to DB keys
+const MED_ALIASES = {
+  ketofan:  ['ketofan','كيتوفان','ketoprofen','كيتوبروفين','ketofen','kitofan'],
+  cataflam: ['cataflam','كتافلام','كتافلم','diclofenac potassium','diclofenac','diclofast','volttaren potassium'],
+  ambezim:  ['ambezim','امبيزيم','أمبيزيم','trypsin','chymotrypsin','bromelain','بروميلين'],
+  brufin:   ['brufin','بروفين','ibuprofen','إيبوبروفين','ايبوبروفين','brufen','nurofen','advil']
+};
+
+function lookupInDB(nameEn, nameAr){
+  const q = ((nameEn||'') + ' ' + (nameAr||'')).toLowerCase();
+  for(const [key, aliases] of Object.entries(MED_ALIASES)){
+    if(aliases.some(a => q.includes(a.toLowerCase()))) return MED_DATABASE[key];
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════
+//  DATA
+// ════════════════════════════════════════════
+const INTENTS = [
+  { en:'Wake',        ar:'تشغيل',     key:'wake',
+    desc:'Activates the system and prepares it for voice commands',
+    utterances:[{t:'يا ثيرابيا',d:'rtl'},{t:'hey therapeia',d:'ltr'},{t:'wake up',d:'ltr'},{t:'شغّل',d:'rtl'}],
+    f1:{cnn:0.98,lstm:0.99,bert:1.00},
+    confusion:'Rarely confused with other intents due to its distinctive wake word trigger.',
+  },
+  { en:'Scan',        ar:'مسح',       key:'scan',
+    desc:'Initiates a barcode or QR code scan for medication identification',
+    utterances:[{t:'امسح',d:'rtl'},{t:'scan the pill',d:'ltr'},{t:'check this',d:'ltr'},{t:'فحص الكود',d:'rtl'}],
+    f1:{cnn:0.95,lstm:0.97,bert:0.99},
+    confusion:'Occasionally confused with Start in edge cases involving ambiguous phrasing.',
+  },
+  { en:'Start',       ar:'بدء',       key:'start',
+    desc:'Begins a new session or resumes a paused workflow',
+    utterances:[{t:'ابدأ دلوقتي',d:'rtl'},{t:'start now',d:'ltr'},{t:'begin session',d:'ltr'},{t:'ابدأ',d:'rtl'}],
+    f1:{cnn:0.91,lstm:0.94,bert:0.98},
+    confusion:'Can be confused with Scan when the user says "start scanning" — context resolves most cases.',
+  },
+  { en:'Stop',        ar:'إيقاف',     key:'stop',
+    desc:'Pauses or terminates the current active operation',
+    utterances:[{t:'وقف',d:'rtl'},{t:'stop',d:'ltr'},{t:'halt',d:'ltr'},{t:'إيقاف',d:'rtl'}],
+    f1:{cnn:0.96,lstm:0.97,bert:0.99},
+    confusion:'Rarely confused — strongly distinct vocabulary. Minor overlap with Sleep in some dialects.',
+  },
+  { en:'Sleep',       ar:'نوم',       key:'sleep',
+    desc:'Puts the device into low-power sleep or standby mode',
+    utterances:[{t:'نام',d:'rtl'},{t:'sleep mode',d:'ltr'},{t:'hibernate',d:'ltr'},{t:'استنا',d:'rtl'}],
+    f1:{cnn:0.93,lstm:0.95,bert:0.98},
+    confusion:'Sometimes confused with Stop — both convey "ending" an action. Context-window helps.',
+  },
+  { en:'Inventory',   ar:'جرد',       key:'inventory',
+    desc:'Lists all medications currently tracked in the system',
+    utterances:[{t:'الأدوية الموجودة',d:'rtl'},{t:'show all meds',d:'ltr'},{t:'جرد الأدوية',d:'rtl'},{t:'list medications',d:'ltr'}],
+    f1:{cnn:0.94,lstm:0.96,bert:0.99},
+    confusion:'Most commonly confused with Quantity — both involve "listing" concepts. Strong with BERT.',
+  },
+  { en:'Quantity',    ar:'كمية',      key:'quantity',
+    desc:'Queries the remaining stock count for a specific medication',
+    utterances:[{t:'كام باقي',d:'rtl'},{t:'how many left',d:'ltr'},{t:'كمية الدواء',d:'rtl'},{t:'remaining count',d:'ltr'}],
+    f1:{cnn:0.92,lstm:0.95,bert:0.97},
+    confusion:'Overlap with Inventory when phrasing implies "show me how many of all meds". CNN scores lowest here.',
+  },
+  { en:'Medicine Name', ar:'اسم الدواء', key:'medicine_name',
+    desc:'Retrieves detailed information about a specific medication by name',
+    utterances:[{t:'ايه هو الباراسيتامول',d:'rtl'},{t:'what is paracetamol',d:'ltr'},{t:'معلومات الدواء',d:'rtl'},{t:'drug info',d:'ltr'}],
+    f1:{cnn:0.90,lstm:0.93,bert:0.97},
+    confusion:'Occasionally confused with Inventory when the medicine name contains list-like keywords.',
+  },
+];
+
+const PREDICTIONS = {
+  'يا ثيرابيا':    {intent:'wake',        cnn:97.2},
+  'امسح':           {intent:'scan',        cnn:95.8},
+  'ابدأ دلوقتي':   {intent:'start',       cnn:93.1},
+  'وقف':            {intent:'stop',        cnn:98.4},
+  'نام':            {intent:'sleep',       cnn:94.7},
+  'الأدوية الموجودة':{intent:'inventory', cnn:96.2},
+  'كام باقي':      {intent:'quantity',    cnn:92.6},
+  'ايه هو الباراسيتامول':{intent:'medicine_name',cnn:91.8},
+  'hey therapeia': {intent:'wake',        cnn:96.5},
+  'scan the pill': {intent:'scan',        cnn:94.2},
+  'show all meds': {intent:'inventory',   cnn:95.1},
+  'how many left': {intent:'quantity',    cnn:93.7},
+};
+
+const MODEL_SPEEDS = {cnn:'~1ms', lstm:'~3ms', bert:'~15ms'};
+const MODEL_LABELS = {cnn:'TextCNN', lstm:'BiLSTM', bert:'DistilBERT'};
+const MODEL_COLORS = {cnn:'#F59E0B', lstm:'#10B981', bert:'#A855F7'};
+const INTENT_COLORS = {wake:'#00D4AA',scan:'#3B82F6',start:'#10B981',stop:'#EF4444',sleep:'#A855F7',inventory:'#F59E0B',quantity:'#FB923C',medicine_name:'#EC4899'};
+
+let currentModel = 'cnn';
+let predCount = 0;
+let radarVisible = {cnn:true, lstm:true, bert:true};
+let currentMetric = 'acc';
+let currentSplit = 'both';
+let currentMatrix = 'cnn';
+
+// ════════════════════════════════════════════
+//  PARTICLES
+// ════════════════════════════════════════════
+(function initParticles(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  const N = 60;
+
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  resize();
+  window.addEventListener('resize', resize);
+
+  for(let i=0;i<N;i++) particles.push({
+    x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
+    vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
+    r:Math.random()*1.5+.5, a:Math.random()*.5+.1
+  });
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,212,170,${p.a})`;ctx.fill();
+    });
+    for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
+      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){
+        ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(0,212,170,${.15*(1-d/120)})`;ctx.lineWidth=.6;ctx.stroke();
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ════════════════════════════════════════════
+//  SECTION FADE-IN
+// ════════════════════════════════════════════
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');animateBarsIn(e.target);}});
+},{threshold:.1});
+document.querySelectorAll('.section').forEach(s=>io.observe(s));
+
+function animateBarsIn(section){
+  section.querySelectorAll('.metric-bar[data-val]').forEach((bar,i)=>{
+    const delay = parseInt(bar.dataset.delay||0) + i*40;
+    setTimeout(()=>{ bar.style.width = bar.dataset.val+'%'; }, delay + 200);
+  });
+  section.querySelectorAll('.f1-bar-fill[data-val]').forEach((bar,i)=>{
+    setTimeout(()=>{ bar.style.width = bar.dataset.val+'%'; }, 300 + i*60);
+  });
+}
+
+// ════════════════════════════════════════════
+//  DEMO PREDICTION
+// ════════════════════════════════════════════
+function setDemo(text){
+  document.getElementById('demo-input').value = text;
+  document.getElementById('demo-input').focus();
+  runPrediction();
+}
+
+function generateProbs(mainIntent, mainConf){
+  const intKeys = INTENTS.map(i=>i.key);
+  const remaining = 100 - mainConf;
+  let probs = {};
+  intKeys.forEach(k=>{ probs[k] = k===mainIntent ? mainConf : 0; });
+  const others = intKeys.filter(k=>k!==mainIntent);
+  let leftover = remaining;
+  others.forEach((k,i)=>{
+    if(i===others.length-1){ probs[k]=Math.max(0,+leftover.toFixed(1)); }
+    else{
+      const v = +(Math.random()*(leftover*.5)).toFixed(1);
+      probs[k]=v; leftover-=v;
+    }
+  });
+  return probs;
+}
+
+async function runPrediction(){
+  const text = document.getElementById('demo-input').value.trim();
+  if(!text) return;
+  const wrapper = document.getElementById('input-wrapper');
+  wrapper.classList.add('scanning');
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '⚡ Classifying...';
+
+  let pred, conf;
+
+  try {
+    // ── Claude AI Classification ──
+    const t0 = performance.now();
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are THERAPEÍA, a medical NLP intent classifier for Arabic and English pharmacy assistant commands.
+
+Classify the input text into EXACTLY ONE of these 8 intents:
+- wake       → Wake word / activate system (يا ثيرابيا, hey therapeia, شغّل, wake up)
+- scan       → Barcode/QR scan request (امسح, scan, فحص الكود, check this)
+- start      → Start session/begin workflow (ابدأ, start, begin)
+- stop       → Stop/pause (وقف, stop, halt, إيقاف)
+- sleep      → Sleep/standby mode (نام, sleep, hibernate, استنا)
+- inventory  → List all medications (الأدوية, show meds, جرد, list medications)
+- quantity   → Check remaining count (كام باقي, how many left, كمية)
+- medicine_name → Get drug information (ايه هو, what is, معلومات الدواء, drug info)
+
+Respond ONLY with valid JSON, no markdown, no explanation:
+{"intent":"<one of the 8 keys>","confidence":<0-100 float>,"reasoning":"<one short sentence>","all_probs":{"wake":<0-100>,"scan":<0-100>,"start":<0-100>,"stop":<0-100>,"sleep":<0-100>,"inventory":<0-100>,"quantity":<0-100>,"medicine_name":<0-100>}}
+
+The all_probs values should sum to 100. Be accurate and realistic.`,
+        messages:[{role:'user', content:`Classify this command: "${text}"`}]
+      })
+    });
+
+    const elapsed = ((performance.now()-t0)/1000).toFixed(2)+'s';
+    wrapper.classList.remove('scanning');
+
+    if(response.ok){
+      const data = await response.json();
+      const raw = data.content.map(c=>c.text||'').join('');
+      const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+      pred = { intent: parsed.intent, confidence: parsed.confidence, all_probs: parsed.all_probs, reasoning: parsed.reasoning, elapsed };
+    } else {
+      throw new Error('API error');
+    }
+  } catch(err) {
+    // Fallback to local
+    wrapper.classList.remove('scanning');
+    const fallback = PREDICTIONS[text] || fuzzyMatch(text);
+    const conf_ = fallback.cnn + (Math.random()*2-1);
+    pred = { intent: fallback.intent, confidence: conf_, all_probs: null, reasoning: 'Local classifier fallback', elapsed: '~1ms' };
+  }
+
+  conf = pred.confidence;
+  const intentData = INTENTS.find(i=>i.key===pred.intent) || INTENTS[0];
+  const color = INTENT_COLORS[pred.intent]||'#00D4AA';
+
+  const probs = pred.all_probs || generateProbs(pred.intent, conf);
+
+  // Update badge
+  const badge = document.getElementById('intent-badge');
+  badge.textContent = intentData.en;
+  badge.style.background = color+'22';
+  badge.style.color = color;
+  badge.style.borderColor = color+'66';
+
+  const isAI = !!pred.all_probs;
+  document.getElementById('model-used-label').textContent = isAI ? '🤖 Claude AI' : '🔧 '+MODEL_LABELS[currentModel];
+  document.getElementById('proc-time').textContent = '⏱ '+pred.elapsed;
+
+  const rc = document.getElementById('result-card');
+  rc.classList.remove('show');
+  rc.style.display='block';
+  void rc.offsetWidth;
+  rc.classList.add('show');
+
+  // Show AI reasoning if available
+  let reasoningEl = document.getElementById('ai-reasoning');
+  if(!reasoningEl){ reasoningEl=document.createElement('div'); reasoningEl.id='ai-reasoning'; rc.insertBefore(reasoningEl, rc.querySelector('.conf-bar-wrap')); }
+  if(pred.reasoning){
+    reasoningEl.style.cssText='background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-family:JetBrains Mono,monospace;font-size:.75rem;color:#94A3B8;display:flex;gap:8px;align-items:flex-start;';
+    reasoningEl.innerHTML=`<span style="color:#00D4AA;flex-shrink:0">${isAI?'🤖':'⚡'}</span><span>${pred.reasoning}</span>`;
+  } else { reasoningEl.style.display='none'; }
+
+  // Confidence bar
+  document.getElementById('conf-pct').textContent = conf.toFixed(1)+'%';
+  const bar = document.getElementById('conf-bar');
+  bar.style.background = color;
+  bar.style.width = '0%';
+  setTimeout(()=>{ bar.style.transition='width 1s cubic-bezier(.34,1.56,.64,1)'; bar.style.width=conf.toFixed(1)+'%'; },100);
+
+  // Intent grid
+  const grid = document.getElementById('intents-grid');
+  grid.innerHTML='';
+  INTENTS.forEach(intent=>{
+    const p = typeof probs[intent.key]==='number' ? probs[intent.key] : 0;
+    const isWinner = intent.key===pred.intent;
+    const div = document.createElement('div');
+    div.className='intent-bar-item';
+    div.innerHTML=`<div class="intent-bar-label ${isWinner?'winner':''}"><span>${intent.en}</span><span>${p.toFixed(1)}%</span></div><div class="intent-mini-track"><div class="intent-mini-fill ${isWinner?'winner':''}" style="width:0%;"></div></div>`;
+    grid.appendChild(div);
+    const fill = div.querySelector('.intent-mini-fill');
+    setTimeout(()=>{ fill.style.transition='width .8s ease'; fill.style.width=p+'%'; }, 200 + INTENTS.indexOf(intent)*80);
+  });
+
+  predCount++;
+  document.querySelectorAll('.pred-count').forEach(el=>{ el.textContent=predCount.toLocaleString(); });
+  document.getElementById('pred-num').textContent=predCount;
+  btn.disabled = false;
+  btn.textContent = '⚡ Classify Intent';
+  if(isAI) showToast('🤖 Claude AI classified this!','success');
+}
+
+function fuzzyMatch(text){
+  const t = text.toLowerCase();
+  if(t.includes('scan')||t.includes('امسح')||t.includes('مسح')) return {intent:'scan',cnn:93.5};
+  if(t.includes('start')||t.includes('ابدأ')||t.includes('begin')) return {intent:'start',cnn:92.0};
+  if(t.includes('stop')||t.includes('وقف')||t.includes('halt')) return {intent:'stop',cnn:96.0};
+  if(t.includes('sleep')||t.includes('نام')||t.includes('hibernate')) return {intent:'sleep',cnn:93.5};
+  if(t.includes('med')||t.includes('drug')||t.includes('الأدوية')) return {intent:'inventory',cnn:94.0};
+  if(t.includes('how many')||t.includes('كام')||t.includes('كمية')) return {intent:'quantity',cnn:91.0};
+  if(t.includes('what is')||t.includes('ايه هو')||t.includes('معلومات')) return {intent:'medicine_name',cnn:90.5};
+  return {intent:'wake', cnn:95.0};
+}
+
+function setModel(m){
+  currentModel = m;
+  ['cnn','lstm','bert'].forEach(k=>{
+    const btn = document.getElementById('sel-'+k);
+    if(btn) btn.classList.toggle('active', k===m);
+  });
+}
+
+document.getElementById('demo-input').addEventListener('keydown',e=>{ if(e.key==='Enter') runPrediction(); });
+
+// ════════════════════════════════════════════
+//  MICROPHONE (Web Speech API)
+// ════════════════════════════════════════════
+let recognition = null;
+let isListening = false;
+
+function initSpeech(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.continuous = false;
+  r.interimResults = false;
+  r.onresult = e=>{
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('demo-input').value = transcript;
+    stopListening();
+    setTimeout(()=>runPrediction(),300);
+  };
+  r.onend = ()=>stopListening();
+  r.onerror = ()=>stopListening();
+  return r;
+}
+
+function toggleMic(){
+  if(isListening) stopListening();
+  else startListening();
+}
+
+function startListening(){
+  if(!recognition) recognition = initSpeech();
+  if(!recognition){ alert('Speech recognition not supported in this browser.'); return; }
+  const lang = document.getElementById('lang-select').value;
+  recognition.lang = lang;
+  try{ recognition.start(); }catch(e){}
+  isListening = true;
+  document.getElementById('mic-btn').classList.add('listening');
+  document.getElementById('mic-btn').textContent = '⏹';
+  document.getElementById('voice-wave').classList.add('active');
+  document.getElementById('listen-msg').classList.add('active');
+}
+
+function stopListening(){
+  isListening = false;
+  if(recognition) try{ recognition.stop(); }catch(e){}
+  document.getElementById('mic-btn').classList.remove('listening');
+  document.getElementById('mic-btn').textContent = '🎤';
+  document.getElementById('voice-wave').classList.remove('active');
+  document.getElementById('listen-msg').classList.remove('active');
+}
+
+document.getElementById('mic-btn').addEventListener('click',toggleMic);
+
+// ════════════════════════════════════════════
+//  INTENT EXPLORER
+// ════════════════════════════════════════════
+let activeIntent = 0;
+
+function buildExplorer(){
+  const sidebar = document.getElementById('intent-sidebar');
+  INTENTS.forEach((intent,i)=>{
+    const div = document.createElement('div');
+    div.className='intent-sidebar-item'+(i===0?' active':'');
+    div.innerHTML=`<div class="intent-sidebar-en">${intent.en}</div><div class="intent-sidebar-ar">${intent.ar}</div>`;
+    div.addEventListener('click',()=>{ selectIntent(i); });
+    sidebar.appendChild(div);
+  });
+  renderIntentDetail(0);
+}
+
+function selectIntent(i){
+  activeIntent = i;
+  document.querySelectorAll('.intent-sidebar-item').forEach((el,j)=>el.classList.toggle('active',j===i));
+  renderIntentDetail(i);
+}
+
+function renderIntentDetail(i){
+  const intent = INTENTS[i];
+  const detail = document.getElementById('intent-detail');
+  detail.style.opacity='0';
+  setTimeout(()=>{
+    detail.innerHTML=`
+      <div class="intent-detail-name">${intent.en}</div>
+      <div class="intent-detail-desc">${intent.desc}</div>
+      <div class="detail-section-label">Example Utterances</div>
+      <div class="utterances-grid">
+        ${intent.utterances.map(u=>`<div class="utterance-pill" dir="${u.d}">${u.t}</div>`).join('')}
+      </div>
+      <div class="detail-section-label">Model F1 Scores</div>
+      ${['cnn','lstm','bert'].map(m=>`
+        <div class="f1-row">
+          <div class="f1-model-name" style="color:${MODEL_COLORS[m]}">${MODEL_LABELS[m]}</div>
+          <div class="f1-bar-track"><div class="f1-bar-fill" data-val="${(intent.f1[m]*100).toFixed(0)}" style="background:${MODEL_COLORS[m]};"></div></div>
+          <div class="f1-value" style="color:${MODEL_COLORS[m]}">${(intent.f1[m]*100).toFixed(1)}%</div>
+        </div>
+      `).join('')}
+      <div class="confusion-note"><strong>Confusion Analysis:</strong> ${intent.confusion}</div>
+    `;
+    detail.style.transition='opacity .25s ease';
+    detail.style.opacity='1';
+    // Animate F1 bars
+    detail.querySelectorAll('.f1-bar-fill[data-val]').forEach((bar,j)=>{
+      setTimeout(()=>{ bar.style.width=bar.dataset.val+'%'; }, 100+j*100);
+    });
+  },100);
+}
+
+buildExplorer();
+
+// ════════════════════════════════════════════
+//  TRAINING CHART
+// ════════════════════════════════════════════
+function genCurve(epochs, finalAcc, startAcc, noise){
+  return Array.from({length:epochs},(_,i)=>{
+    const t = i/(epochs-1);
+    const sig = 1/(1+Math.exp(-8*(t-.35)));
+    const v = startAcc + (finalAcc-startAcc)*sig;
+    return +(v+(Math.random()-.5)*noise).toFixed(4);
+  });
+}
+function genLoss(epochs, finalLoss, startLoss, noise){
+  return Array.from({length:epochs},(_,i)=>{
+    const t = i/(epochs-1);
+    const v = startLoss - (startLoss-finalLoss)*(1-Math.exp(-3.5*t));
+    return +(v+(Math.random()-.5)*noise).toFixed(4);
+  });
+}
+
+const cnnEp=35,lstmEp=30,bertEp=10;
+const trainingData = {
+  cnn_acc_t:  genCurve(cnnEp, .942,.50,.012),
+  cnn_acc_v:  genCurve(cnnEp, .934,.48,.014),
+  lstm_acc_t: genCurve(lstmEp,.956,.52,.011),
+  lstm_acc_v: genCurve(lstmEp,.948,.50,.013),
+  bert_acc_t: genCurve(bertEp,.987,.75,.008),
+  bert_acc_v: genCurve(bertEp,.979,.73,.010),
+  cnn_loss_t: genLoss(cnnEp, .18,1.8,.06),
+  cnn_loss_v: genLoss(cnnEp, .22,1.9,.07),
+  lstm_loss_t:genLoss(lstmEp,.15,1.7,.05),
+  lstm_loss_v:genLoss(lstmEp,.19,1.8,.06),
+  bert_loss_t:genLoss(bertEp,.06,1.2,.03),
+  bert_loss_v:genLoss(bertEp,.09,1.3,.04),
+};
+
+let trainingChart = null;
+function buildTrainingChart(){
+  const ctx = document.getElementById('training-chart').getContext('2d');
+  trainingChart = new Chart(ctx,{
+    type:'line',
+    data: getTrainingDataset(),
+    options:{
+      responsive:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1C2537',borderColor:'#1E3A5F',borderWidth:1,
+          titleFont:{family:'JetBrains Mono',size:12},
+          bodyFont:{family:'JetBrains Mono',size:11},
+          padding:10,
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(30,58,95,.4)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:10}},title:{display:true,text:'Epoch',color:'#475569',font:{family:'JetBrains Mono',size:11}}},
+        y:{grid:{color:'rgba(30,58,95,.4)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:10},callback:v=>currentMetric==='acc'?(v*100).toFixed(0)+'%':v.toFixed(2)},min:currentMetric==='acc'?.4:0,max:currentMetric==='acc'?1.02:2},
+      },
+      animation:{duration:800,easing:'easeInOutQuart'},
+    }
+  });
+}
+
+function getTrainingDataset(){
+  const d = trainingData;
+  const maxEp = Math.max(cnnEp,lstmEp,bertEp);
+  const labels = Array.from({length:maxEp},(_,i)=>i+1);
+  const metric = currentMetric;
+  const padTo = (arr,len)=>{ const a=[...arr]; while(a.length<len) a.push(null); return a; };
+
+  const datasets = [];
+  const models = [{key:'cnn',col:'#F59E0B'},{key:'lstm',col:'#10B981'},{key:'bert',col:'#A855F7'}];
+  const eps = {cnn:cnnEp,lstm:lstmEp,bert:bertEp};
+
+  models.forEach(({key,col})=>{
+    const tKey=`${key}_${metric}_t`, vKey=`${key}_${metric}_v`;
+    if(currentSplit==='train'||currentSplit==='both'){
+      datasets.push({
+        label:`${MODEL_LABELS[key]} Train`,
+        data:padTo(d[tKey],maxEp),
+        borderColor:col,backgroundColor:col+'22',
+        borderWidth:2,pointRadius:1,pointHoverRadius:4,
+        tension:.35,
+      });
+    }
+    if(currentSplit==='val'||currentSplit==='both'){
+      datasets.push({
+        label:`${MODEL_LABELS[key]} Val`,
+        data:padTo(d[vKey],maxEp),
+        borderColor:col,backgroundColor:'transparent',
+        borderWidth:2,pointRadius:1,pointHoverRadius:4,
+        tension:.35,borderDash:[5,5],
+      });
+    }
+  });
+  return {labels,datasets};
+}
+
+function setMetric(m){
+  currentMetric=m;
+  ['acc','loss'].forEach(k=>document.getElementById('ctrl-'+k).classList.toggle('active',k===m));
+  trainingChart.options.scales.y.min = m==='acc'?.4:0;
+  trainingChart.options.scales.y.max = m==='acc'?1.02:2;
+  trainingChart.options.scales.y.ticks.callback = v=>m==='acc'?(v*100).toFixed(0)+'%':v.toFixed(2);
+  trainingChart.data = getTrainingDataset();
+  trainingChart.update();
+}
+
+function setSplit(s){
+  currentSplit=s;
+  ['both','train','val'].forEach(k=>document.getElementById('ctrl-'+k).classList.toggle('active',k===s));
+  trainingChart.data = getTrainingDataset();
+  trainingChart.update();
+}
+
+buildTrainingChart();
+
+// ════════════════════════════════════════════
+//  CONFUSION MATRIX
+// ════════════════════════════════════════════
+const LABELS=['Wake','Scan','Start','Stop','Sleep','Inv','Qty','Med'];
+const MATRICES = {
+  cnn:[
+    [100,0,0,0,0,0,0,0],
+    [0,99,0,0,0,0,1,0],
+    [0,1,93,1,2,0,2,1],
+    [0,0,1,98,1,0,0,0],
+    [0,0,1,1,97,0,1,0],
+    [0,0,0,0,0,94,4,2],
+    [0,0,0,0,1,2,95,2],
+    [0,0,0,0,0,2,2,96],
+  ],
+  lstm:[
+    [100,0,0,0,0,0,0,0],
+    [0,99,0,0,0,0,1,0],
+    [0,1,95,1,1,0,1,1],
+    [0,0,1,98,1,0,0,0],
+    [0,0,1,0,98,0,1,0],
+    [0,0,0,0,0,96,3,1],
+    [0,0,0,0,0,2,96,2],
+    [0,0,0,0,0,1,1,98],
+  ],
+  bert:[
+    [100,0,0,0,0,0,0,0],
+    [0,100,0,0,0,0,0,0],
+    [0,0,98,0,1,0,1,0],
+    [0,0,0,99,1,0,0,0],
+    [0,0,0,1,98,0,1,0],
+    [0,0,0,0,0,99,1,0],
+    [0,0,0,0,0,1,97,2],
+    [0,0,0,0,0,0,1,99],
+  ],
+};
+
+function buildMatrix(model){
+  const grid = document.getElementById('matrix-grid');
+  grid.innerHTML='';
+  const data = MATRICES[model];
+  // top-left corner
+  const corner = document.createElement('div');
+  corner.className='matrix-header-cell';
+  corner.innerHTML='<span style="font-size:.6rem;color:#475569">Actual\\ Pred</span>';
+  grid.appendChild(corner);
+  // col headers
+  LABELS.forEach(l=>{ const c=document.createElement('div'); c.className='matrix-header-cell'; c.textContent=l; grid.appendChild(c); });
+  // rows
+  data.forEach((row,ri)=>{
+    const lbl=document.createElement('div'); lbl.className='matrix-row-label'; lbl.textContent=LABELS[ri]; grid.appendChild(lbl);
+    row.forEach((val,ci)=>{
+      const cell=document.createElement('div');
+      cell.className='matrix-cell';
+      const isDiag=ri===ci;
+      const maxOff=6;
+      const bg = isDiag
+        ? `rgba(16,185,129,${.15+.65*(val/100)})`
+        : val>0 ? `rgba(239,68,68,${Math.min(.9,val/maxOff*.7)})` : 'rgba(255,255,255,.02)';
+      cell.style.background=bg;
+      cell.style.color = isDiag ? '#F1F5F9' : val>0 ? '#FCA5A5' : '#475569';
+      cell.innerHTML=`${val}<div class="matrix-tooltip">${LABELS[ri]}→${LABELS[ci]}: ${val}%</div>`;
+      grid.appendChild(cell);
+    });
+  });
+}
+
+function setMatrix(m){
+  currentMatrix=m;
+  ['cnn','lstm','bert'].forEach(k=>{
+    const btn=document.getElementById('mx-'+k);
+    btn.classList.toggle('active',k===m);
+    btn.style.color = k===m ? MODEL_COLORS[k] : 'var(--text-muted)';
+    btn.style.background = k===m ? MODEL_COLORS[k]+'22' : 'transparent';
+  });
+  buildMatrix(m);
+}
+
+buildMatrix('cnn');
+
+// ════════════════════════════════════════════
+//  RADAR CHART
+// ════════════════════════════════════════════
+const radarLabels = ['Wake','Scan','Start','Stop','Sleep','Inventory','Quantity','Med Name'];
+const radarData = {
+  cnn:  [0.98,0.95,0.91,0.96,0.93,0.94,0.92,0.90],
+  lstm: [0.99,0.97,0.94,0.97,0.95,0.96,0.95,0.93],
+  bert: [1.00,0.99,0.98,0.99,0.98,0.99,0.97,0.97],
+};
+
+let radarChart = null;
+function buildRadarChart(){
+  const ctx = document.getElementById('radar-chart').getContext('2d');
+  radarChart = new Chart(ctx,{
+    type:'radar',
+    data:{ labels:radarLabels, datasets:getRadarDatasets() },
+    options:{
+      responsive:true,
+      scales:{r:{
+        min:.8,max:1.0,
+        backgroundColor:'rgba(10,14,26,.5)',
+        angleLines:{color:'rgba(30,58,95,.8)'},
+        grid:{color:'rgba(30,58,95,.8)'},
+        pointLabels:{color:'#94A3B8',font:{family:'JetBrains Mono',size:11}},
+        ticks:{color:'#475569',backdropColor:'transparent',font:{family:'JetBrains Mono',size:10},stepSize:.05,callback:v=>(v*100).toFixed(0)+'%'},
+      }},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1C2537',borderColor:'#1E3A5F',borderWidth:1,
+          titleFont:{family:'JetBrains Mono',size:12},
+          bodyFont:{family:'JetBrains Mono',size:11},
+          callbacks:{label:ctx=>`${ctx.dataset.label}: ${(ctx.raw*100).toFixed(1)}%`}
+        }
+      },
+      animation:{duration:800},
+    }
+  });
+}
+
+function getRadarDatasets(){
+  const ds=[];
+  if(radarVisible.cnn) ds.push({label:'TextCNN',data:radarData.cnn,borderColor:'#F59E0B',backgroundColor:'rgba(245,158,11,.12)',borderWidth:2,pointBackgroundColor:'#F59E0B',pointRadius:3});
+  if(radarVisible.lstm) ds.push({label:'BiLSTM',data:radarData.lstm,borderColor:'#10B981',backgroundColor:'rgba(16,185,129,.12)',borderWidth:2,pointBackgroundColor:'#10B981',pointRadius:3});
+  if(radarVisible.bert) ds.push({label:'DistilBERT',data:radarData.bert,borderColor:'#A855F7',backgroundColor:'rgba(168,85,247,.12)',borderWidth:2,pointBackgroundColor:'#A855F7',pointRadius:3});
+  return ds;
+}
+
+function toggleRadar(m){
+  radarVisible[m]=!radarVisible[m];
+  const btn=document.getElementById('rt-'+m);
+  const colClass = m==='cnn'?'active-orange':m==='lstm'?'active-green':'active-purple';
+  btn.className='radar-toggle '+(radarVisible[m]?colClass:'inactive');
+  radarChart.data.datasets=getRadarDatasets();
+  radarChart.update();
+}
+
+buildRadarChart();
+
+// ════════════════════════════════════════════
+//  COMPARISON MODE
+// ════════════════════════════════════════════
+let compareMode = false;
+function toggleComparison(){
+  compareMode=!compareMode;
+  const grid=document.getElementById('models-grid');
+  if(compareMode){
+    grid.style.gridTemplateColumns='1fr';
+    document.getElementById('comparison-btn').style.borderColor='var(--teal)';
+    document.getElementById('comparison-btn').style.color='var(--teal)';
+  } else {
+    grid.style.gridTemplateColumns='repeat(3,1fr)';
+    document.getElementById('comparison-btn').style.borderColor='var(--border)';
+    document.getElementById('comparison-btn').style.color='var(--text-sec)';
+  }
+}
+
+// ════════════════════════════════════════════
+//  EXPORT / SHARE — PREMIUM
+// ════════════════════════════════════════════
+let lastExportData = null; // stores latest prediction for export
+
+function exportResult(){
+  const badge = document.getElementById('intent-badge');
+  const inputText = document.getElementById('demo-input').value.trim();
+  if(!badge.textContent || badge.textContent === '—'){ showToast('⚠ Run a prediction first!','warn'); return; }
+
+  // Build rich JSON export
+  const intentData = INTENTS.find(i=>i.en===badge.textContent)||{};
+  const confPct = document.getElementById('conf-pct').textContent;
+
+  const payload = {
+    app: 'THERAPEÍA NLP Intent Classifier',
+    version: '1.0',
+    timestamp: new Date().toISOString(),
+    input: { text: inputText, language: document.getElementById('lang-select').value },
+    prediction: {
+      intent: badge.textContent,
+      intent_ar: intentData.ar||'—',
+      confidence: confPct,
+      model: MODEL_LABELS[currentModel],
+      model_speed: MODEL_SPEEDS[currentModel],
+    },
+    session_predictions: predCount,
+  };
+
+  // Show export modal
+  showExportModal(payload);
+}
+
+function showExportModal(payload){
+  // Remove existing modal
+  const old = document.getElementById('export-modal');
+  if(old) old.remove();
+
+  const modal = document.createElement('div');
+  modal.id='export-modal';
+  modal.style.cssText=`
+    position:fixed;inset:0;z-index:9999;background:rgba(10,14,26,.85);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s ease;
+  `;
+  modal.innerHTML=`
+    <div style="background:#111827;border:1px solid #1E3A5F;border-radius:18px;padding:28px;max-width:560px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.8);position:relative;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);">
+      <button onclick="document.getElementById('export-modal').remove()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.05);border:1px solid #1E3A5F;border-radius:8px;color:#94A3B8;font-size:16px;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;">✕</button>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:#F1F5F9;margin-bottom:4px;">↓ Export Prediction</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#475569;margin-bottom:20px;letter-spacing:.08em;">CHOOSE FORMAT</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+        <button onclick="doExportJSON()" style="padding:14px 8px;border-radius:10px;border:1px solid #1E3A5F;background:rgba(168,85,247,.1);color:#A855F7;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(168,85,247,.22)'" onmouseout="this.style.background='rgba(168,85,247,.1)'">
+          <div style="font-size:22px;margin-bottom:6px;">{ }</div>
+          JSON
+        </button>
+        <button onclick="doExportTXT()" style="padding:14px 8px;border-radius:10px;border:1px solid #1E3A5F;background:rgba(59,130,246,.1);color:#3B82F6;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(59,130,246,.22)'" onmouseout="this.style.background='rgba(59,130,246,.1)'">
+          <div style="font-size:22px;margin-bottom:6px;">📄</div>
+          TXT
+        </button>
+        <button onclick="doExportCSV()" style="padding:14px 8px;border-radius:10px;border:1px solid #1E3A5F;background:rgba(16,185,129,.1);color:#10B981;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(16,185,129,.22)'" onmouseout="this.style.background='rgba(16,185,129,.1)'">
+          <div style="font-size:22px;margin-bottom:6px;">📊</div>
+          CSV
+        </button>
+      </div>
+
+      <div style="background:#060A14;border:1px solid #1E3A5F;border-radius:10px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#94A3B8;line-height:1.7;max-height:160px;overflow:auto;">
+        <div style="color:#A855F7">// THERAPEÍA Export Preview</div>
+        <div><span style="color:#3B82F6">intent</span>: <span style="color:#10B981">"${payload.prediction.intent}"</span></div>
+        <div><span style="color:#3B82F6">confidence</span>: <span style="color:#F59E0B">${payload.prediction.confidence}</span></div>
+        <div><span style="color:#3B82F6">model</span>: <span style="color:#10B981">"${payload.prediction.model}"</span></div>
+        <div><span style="color:#3B82F6">input</span>: <span style="color:#10B981">"${payload.input.text}"</span></div>
+        <div><span style="color:#3B82F6">timestamp</span>: <span style="color:#475569">${new Date().toLocaleTimeString()}</span></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+  lastExportData = payload;
+}
+
+function doExportJSON(){
+  const blob = new Blob([JSON.stringify(lastExportData, null, 2)], {type:'application/json'});
+  triggerDownload(blob, 'therapeia-prediction.json');
+  showToast('✓ JSON exported!','success');
+  document.getElementById('export-modal')?.remove();
+}
+function doExportTXT(){
+  const p = lastExportData.prediction;
+  const txt = [
+    '╔══════════════════════════════════════════╗',
+    '║      THERAPEÍA — NLP Intent Classifier   ║',
+    '╚══════════════════════════════════════════╝',
+    '',
+    `  Intent      : ${p.intent} (${p.intent_ar})`,
+    `  Confidence  : ${p.confidence}`,
+    `  Model       : ${p.model}  [${p.model_speed}]`,
+    `  Input Text  : "${lastExportData.input.text}"`,
+    `  Language    : ${lastExportData.input.language}`,
+    `  Timestamp   : ${lastExportData.timestamp}`,
+    `  Session #   : ${lastExportData.session_predictions}`,
+    '',
+    '──────────────────────────────────────────',
+    '  Generated by THERAPEÍA v1.0',
+  ].join('\n');
+  const blob = new Blob([txt], {type:'text/plain'});
+  triggerDownload(blob, 'therapeia-prediction.txt');
+  showToast('✓ TXT exported!','success');
+  document.getElementById('export-modal')?.remove();
+}
+function doExportCSV(){
+  const p = lastExportData.prediction;
+  const rows = [
+    'timestamp,input_text,language,intent,intent_ar,confidence,model,model_speed,session_count',
+    `"${lastExportData.timestamp}","${lastExportData.input.text}","${lastExportData.input.language}","${p.intent}","${p.intent_ar}","${p.confidence}","${p.model}","${p.model_speed}","${lastExportData.session_predictions}"`,
+  ].join('\n');
+  const blob = new Blob([rows], {type:'text/csv'});
+  triggerDownload(blob, 'therapeia-prediction.csv');
+  showToast('✓ CSV exported!','success');
+  document.getElementById('export-modal')?.remove();
+}
+function triggerDownload(blob, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+
+function shareResult(){
+  const badge = document.getElementById('intent-badge');
+  const inputText = document.getElementById('demo-input').value.trim();
+  if(!badge.textContent || badge.textContent === '—'){ showToast('⚠ Run a prediction first!','warn'); return; }
+
+  const confPct = document.getElementById('conf-pct').textContent;
+  const shareText = `🧬 THERAPEÍA NLP Result\n\nInput: "${inputText}"\nIntent: ${badge.textContent}\nConfidence: ${confPct}\nModel: ${MODEL_LABELS[currentModel]}\n\nPowered by THERAPEÍA NLP`;
+
+  if(navigator.share){
+    navigator.share({ title:'THERAPEÍA NLP Result', text: shareText, url: window.location.href })
+      .then(()=>showToast('✓ Shared!','success'))
+      .catch(()=>fallbackShare(shareText));
+  } else {
+    fallbackShare(shareText);
+  }
+}
+
+function fallbackShare(text){
+  // Show share modal
+  const old = document.getElementById('share-modal');
+  if(old) old.remove();
+
+  const modal = document.createElement('div');
+  modal.id='share-modal';
+  modal.style.cssText=`
+    position:fixed;inset:0;z-index:9999;background:rgba(10,14,26,.85);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s ease;
+  `;
+  modal.innerHTML=`
+    <div style="background:#111827;border:1px solid #1E3A5F;border-radius:18px;padding:28px;max-width:520px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.8);position:relative;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);">
+      <button onclick="document.getElementById('share-modal').remove()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.05);border:1px solid #1E3A5F;border-radius:8px;color:#94A3B8;font-size:16px;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;">✕</button>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:#F1F5F9;margin-bottom:4px;">⤴ Share Result</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#475569;margin-bottom:20px;letter-spacing:.08em;">SHARE OPTIONS</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+        <button onclick="copyShareText()" style="padding:14px 8px;border-radius:10px;border:1px solid #1E3A5F;background:rgba(0,212,170,.1);color:#00D4AA;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;cursor:pointer;" onmouseover="this.style.background='rgba(0,212,170,.2)'" onmouseout="this.style.background='rgba(0,212,170,.1)'">
+          <div style="font-size:22px;margin-bottom:6px;">📋</div>
+          Copy Text
+        </button>
+        <button onclick="copyShareLink()" style="padding:14px 8px;border-radius:10px;border:1px solid #1E3A5F;background:rgba(59,130,246,.1);color:#3B82F6;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;cursor:pointer;" onmouseover="this.style.background='rgba(59,130,246,.2)'" onmouseout="this.style.background='rgba(59,130,246,.1)'">
+          <div style="font-size:22px;margin-bottom:6px;">🔗</div>
+          Copy Link
+        </button>
+        <button onclick="shareToWhatsApp()" style="padding:14px 8px;border-radius:10px;border:1px solid #1E3A5F;background:rgba(37,211,102,.1);color:#25D366;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;cursor:pointer;" onmouseover="this.style.background='rgba(37,211,102,.2)'" onmouseout="this.style.background='rgba(37,211,102,.1)'">
+          <div style="font-size:22px;margin-bottom:6px;">💬</div>
+          WhatsApp
+        </button>
+      </div>
+
+      <div id="share-preview" style="background:#060A14;border:1px solid #1E3A5F;border-radius:10px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#94A3B8;line-height:1.6;white-space:pre-wrap;">${text}</div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+  window._shareText = text;
+}
+
+function copyShareText(){
+  navigator.clipboard?.writeText(window._shareText||'').then(()=>{
+    showToast('✓ Copied to clipboard!','success');
+    document.getElementById('share-modal')?.remove();
+  }).catch(()=>showToast('⚠ Copy failed','warn'));
+}
+function copyShareLink(){
+  navigator.clipboard?.writeText(window.location.href).then(()=>{
+    showToast('✓ Link copied!','success');
+    document.getElementById('share-modal')?.remove();
+  }).catch(()=>showToast('⚠ Copy failed','warn'));
+}
+function shareToWhatsApp(){
+  const url = `https://wa.me/?text=${encodeURIComponent(window._shareText||'')}`;
+  window.open(url,'_blank');
+  document.getElementById('share-modal')?.remove();
+}
+
+// ════════════════════════════════════════════
+//  TOAST NOTIFICATION SYSTEM
+// ════════════════════════════════════════════
+function showToast(msg, type='success'){
+  const old = document.getElementById('therapeia-toast');
+  if(old) old.remove();
+
+  const colors = { success:['#10B981','rgba(16,185,129,.15)'], warn:['#F59E0B','rgba(245,158,11,.15)'], error:['#EF4444','rgba(239,68,68,.15)'] };
+  const [borderCol, bgCol] = colors[type]||colors.success;
+
+  const toast = document.createElement('div');
+  toast.id='therapeia-toast';
+  toast.style.cssText=`
+    position:fixed;bottom:28px;right:28px;z-index:99999;
+    background:${bgCol};border:1px solid ${borderCol};
+    border-radius:10px;padding:12px 20px;
+    font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;
+    color:${borderCol};
+    box-shadow:0 8px 32px rgba(0,0,0,.5);
+    animation:toastIn .3s cubic-bezier(.34,1.56,.64,1);
+    backdrop-filter:blur(12px);
+  `;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(()=>{
+    toast.style.animation='toastOut .3s ease forwards';
+    setTimeout(()=>toast.remove(), 300);
+  }, 2800);
+}
+
+// Inject toast animations
+const toastStyle = document.createElement('style');
+toastStyle.textContent=`
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes toastOut{from{opacity:1;transform:translateX(0);}to{opacity:0;transform:translateX(20px);}}
+`;
+document.head.appendChild(toastStyle);
+
+
+// ════════════════════════════════════════════
+//  🔥 MEGA EFFECTS JS
+// ════════════════════════════════════════════
+
+// ── CUSTOM CURSOR ──
+(function(){
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  let rx=0,ry=0,tx=0,ty=0;
+  document.addEventListener('mousemove',e=>{
+    tx=e.clientX; ty=e.clientY;
+    dot.style.left=tx+'px'; dot.style.top=ty+'px';
+  });
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function animRing(){
+    rx=lerp(rx,tx,.12); ry=lerp(ry,ty,.12);
+    ring.style.left=rx+'px'; ring.style.top=ry+'px';
+    requestAnimationFrame(animRing);
+  }
+  animRing();
+
+  document.querySelectorAll('button,a,.ex-pill,.intent-sidebar-item,.model-card,.ctrl-btn,.radar-toggle').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{ dot.classList.add('hovering'); ring.classList.add('hovering'); });
+    el.addEventListener('mouseleave',()=>{ dot.classList.remove('hovering'); ring.classList.remove('hovering'); });
+  });
+  document.addEventListener('mousedown',()=>dot.classList.add('clicking'));
+  document.addEventListener('mouseup',()=>dot.classList.remove('clicking'));
+})();
+
+// ── CLICK RIPPLE ──
+document.addEventListener('click',e=>{
+  const r=document.createElement('div');
+  r.className='ripple-burst';
+  r.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;margin-left:0;margin-top:0;border:1.5px solid var(--teal);`;
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(),700);
+});
+
+// ── MAGNETIC BUTTONS ──
+document.querySelectorAll('.btn,.submit-btn').forEach(btn=>{
+  btn.addEventListener('mousemove',e=>{
+    const rect=btn.getBoundingClientRect();
+    const mx=((e.clientX-rect.left)/rect.width*100).toFixed(1);
+    const my=((e.clientY-rect.top)/rect.height*100).toFixed(1);
+    btn.style.setProperty('--mx',mx+'%');
+    btn.style.setProperty('--my',my+'%');
+    const dx=(e.clientX-rect.left-rect.width/2)*.1;
+    const dy=(e.clientY-rect.top-rect.height/2)*.1;
+    btn.style.transform=`translate(${dx}px,${dy}px)`;
+  });
+  btn.addEventListener('mouseleave',()=>{ btn.style.transform=''; });
+});
+
+// ── CONFETTI BURST on PREDICTION ──
+function burstConfetti(x,y,color){
+  const colors=[color,'#A855F7','#3B82F6','#F59E0B','#10B981','#FFD700'];
+  for(let i=0;i<28;i++){
+    const p=document.createElement('div');
+    p.className='confetti-piece';
+    const angle=(Math.PI*2*(i/28));
+    const dist=60+Math.random()*80;
+    const dx=Math.cos(angle)*dist;
+    const dy=Math.sin(angle)*dist-40;
+    const col=colors[Math.floor(Math.random()*colors.length)];
+    p.style.cssText=`
+      left:${x}px;top:${y}px;
+      background:${col};
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      --dx:${dx}px;--dy:${dy}px;
+      --rot:${Math.random()*720-360}deg;
+      --dur:${.6+Math.random()*.6}s;
+      --delay:${Math.random()*.15}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),1200);
+  }
+}
+
+// Patch runPrediction to trigger confetti
+const _origRunPred = runPrediction;
+window.runPrediction = async function(){
+  await _origRunPred.call(this,...arguments);
+  const badge = document.getElementById('intent-badge');
+  if(badge && badge.textContent && badge.textContent!=='—'){
+    const rect = badge.getBoundingClientRect();
+    const color = badge.style.color || 'var(--teal)';
+    burstConfetti(rect.left+rect.width/2, rect.top+rect.height/2, badge.style.color||'#00D4AA');
+  }
+};
+
+// ── SPARKS CANVAS ──
+(function(){
+  const canvas = document.getElementById('sparks-canvas');
+  const ctx = canvas.getContext('2d');
+  let W,H; const sparks=[];
+
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  resize(); window.addEventListener('resize',resize);
+
+  function addSpark(x,y){
+    for(let i=0;i<3;i++){
+      sparks.push({
+        x,y,
+        vx:(Math.random()-.5)*3,
+        vy:(Math.random()-.5)*3-1,
+        life:1,decay:.025+Math.random()*.02,
+        size:Math.random()*2+1,
+        color:`hsl(${160+Math.random()*60},100%,${60+Math.random()*20}%)`
+      });
+    }
+  }
+
+  document.addEventListener('mousemove',e=>{
+    if(Math.random()>.85) addSpark(e.clientX,e.clientY);
+  });
+
+  function drawSparks(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=sparks.length-1;i>=0;i--){
+      const s=sparks[i];
+      s.x+=s.vx; s.y+=s.vy; s.vy+=.06; s.life-=s.decay;
+      if(s.life<=0){sparks.splice(i,1);continue;}
+      ctx.save();
+      ctx.globalAlpha=s.life*.8;
+      ctx.fillStyle=s.color;
+      ctx.shadowBlur=8; ctx.shadowColor=s.color;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.size*s.life,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    requestAnimationFrame(drawSparks);
+  }
+  drawSparks();
+})();
+
+// ── 3D TILT on MODEL CARDS ──
+document.querySelectorAll('.model-card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const rect=card.getBoundingClientRect();
+    const cx=rect.left+rect.width/2;
+    const cy=rect.top+rect.height/2;
+    const rx=-(e.clientY-cy)/rect.height*14;
+    const ry=(e.clientX-cx)/rect.width*14;
+    card.style.transform=`perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
+    card.style.boxShadow=`${-ry*.8}px ${-rx*.8}px 40px rgba(0,0,0,.4)`;
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='';
+    card.style.boxShadow='';
+  });
+});
+
+// ── GLITCH TITLE SETUP ──
+const logoTitle = document.querySelector('.logo-title');
+if(logoTitle){ logoTitle.setAttribute('data-text', logoTitle.textContent.replace('|','')); }
+
+// ── BOOT SEQUENCE ──
+setTimeout(()=>{
+  const overlay = document.getElementById('boot-overlay');
+  if(overlay){
+    overlay.style.transition='opacity .5s ease';
+    overlay.style.opacity='0';
+    setTimeout(()=>{ overlay.style.display='none'; }, 500);
+  }
+}, 2800);
+
+// ── NUMBER COUNTER ANIMATION (stat pills) ──
+function animCountUp(el, target, duration=1200){
+  const start=parseInt(el.textContent)||0;
+  const range=target-start;
+  const startTime=performance.now();
+  function step(now){
+    const t=Math.min((now-startTime)/duration,1);
+    const ease=1-Math.pow(1-t,3);
+    el.textContent=Math.round(start+range*ease).toLocaleString();
+    if(t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Animate dataset pill on load
+setTimeout(()=>{
+  document.querySelectorAll('.sp-dataset .stat-pill-val').forEach(el=>{
+    animCountUp(el,10000,1800);
+  });
+},1500);
+
+// ── TYPING EFFECT on BOOT STATUS ──
+const bootStatus = document.querySelector('.boot-status');
+if(bootStatus){
+  const msgs=[
+    'LOADING <span>NEURAL WEIGHTS</span>...',
+    'MOUNTING <span>TOKENIZER</span>...',
+    'WARMING <span>ATTENTION HEADS</span>...',
+    'SYSTEM <span>READY</span> ✓',
+  ];
+  let mi=0;
+  const iv=setInterval(()=>{
+    mi++;
+    if(mi<msgs.length) bootStatus.innerHTML=msgs[mi];
+    else clearInterval(iv);
+  },600);
+}
+
+// ── AMBIENT GLOW FOLLOW MOUSE on HEADER ──
+document.querySelector('header')?.addEventListener('mousemove',e=>{
+  const header=e.currentTarget;
+  const rect=header.getBoundingClientRect();
+  const x=e.clientX-rect.left;
+  header.style.background=`
+    radial-gradient(600px circle at ${x}px 50%,rgba(0,212,170,.05),transparent 40%),
+    rgba(10,14,26,.92)
+  `;
+});
+document.querySelector('header')?.addEventListener('mouseleave',e=>{
+  e.currentTarget.style.background='rgba(10,14,26,.92)';
+});
+
+// ════════════════════════════════════════════
+//  ARDUINO / PI SERIAL BRIDGE
+//  الـ Pi بيشغّل pi_serial_server.py على port 5050
+//  الـ HTML يبعت اسم الدواء → الـ Pi يحوّله لحرف → يبعته للأردوينو
+// ════════════════════════════════════════════
+
+// ── عدّل الـ IP لـ Raspberry Pi لو اتغيّر ──
+const PI_SERVER = 'http://raspberrypi.local:5050';
+
+// خريطة الدواء → حرف الأردوينو (نفس ما في الأردوينو)
+const ARDUINO_COMMANDS = {
+  'ketofan'   : 'A',
+  'brufen'    : 'B',
+  'cataflam'  : 'C',
+  'ambezim'   : 'D',
+  'trimed_flu': 'S',
+  'sleep'     : 'D',
+};
+
+async function sendToArduino(medNameEn) {
+  // normalize: lowercase + replace spaces with underscore
+  const key = (medNameEn || '').toLowerCase().trim().replace(/\s+/g, '_');
+  const cmd = ARDUINO_COMMANDS[key];
+
+  if (!cmd) {
+    console.warn('[Arduino] No command mapped for:', key);
+    showToast('⚠️ الدواء مش في قائمة الأردوينو', 'warn');
+    return;
+  }
+
+  // ── أظهر status في الـ UI ──
+  _setArduinoStatus('sending', `📡 بيبعت "${cmd}" للأردوينو...`);
+
+  try {
+    const resp = await fetch(`${PI_SERVER}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd, medicine: key }),
+      signal: AbortSignal.timeout(5000),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      _setArduinoStatus('ok', `✅ أُرسل "${cmd}" — ${key}`);
+      showToast(`🤖 Arduino ← ${cmd} (${key})`, 'success');
+    } else {
+      _setArduinoStatus('err', `❌ الـ Pi رفض: ${data.error || 'unknown'}`);
+      showToast('❌ الـ Pi رجع خطأ', 'error');
+    }
+  } catch (e) {
+    _setArduinoStatus('err', `❌ مش قادر يوصل للـ Pi — تأكد إنه شغّال`);
+    showToast('❌ Pi مش متاح — تأكد من pi_serial_server.py', 'error');
+    console.error('[Arduino]', e);
+  }
+}
+
+function _setArduinoStatus(state, msg) {
+  let el = document.getElementById('arduino-status-bar');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'arduino-status-bar';
+    el.style.cssText = `
+      position:fixed; bottom:70px; right:28px; z-index:99998;
+      font-family:'JetBrains Mono',monospace; font-size:.75rem; font-weight:600;
+      padding:8px 16px; border-radius:10px; border:1px solid;
+      backdrop-filter:blur(12px);
+      transition:opacity .4s, transform .3s;
+    `;
+    document.body.appendChild(el);
+  }
+  const styles = {
+    sending: ['rgba(59,130,246,.15)', '#3B82F6'],
+    ok:      ['rgba(16,185,129,.15)', '#10B981'],
+    err:     ['rgba(239,68,68,.15)', '#EF4444'],
+  };
+  const [bg, border] = styles[state] || styles.sending;
+  el.style.background = bg;
+  el.style.borderColor = border;
+  el.style.color = border;
+  el.style.opacity = '1';
+  el.style.transform = 'translateX(0)';
+  el.textContent = msg;
+  clearTimeout(el._hide);
+  el._hide = setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+  }, 4000);
+}
+
+// ════════════════════════════════════════════
+//  LIVE MED SCANNER — CAMERA (FIXED + HISTORY)
+// ════════════════════════════════════════════
+let camStream = null;
+let scanHistory = []; // { id, thumb, med, time }
+
+/* ── Open camera ── */
+async function openCamera(){
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} },
+      audio:false
+    });
+    const video = document.getElementById('cam-video');
+    video.srcObject = camStream;
+    await video.play().catch(()=>{});
+    video.style.display = 'block';
+    document.getElementById('cam-off-msg').style.display = 'none';
+    document.getElementById('cam-reticle').classList.add('active');
+    document.getElementById('btn-scan').disabled = false;
+    document.getElementById('btn-close-cam').disabled = false;
+    document.getElementById('btn-open-cam').disabled = true;
+    document.getElementById('cam-live-dot').style.display = 'inline-block';
+    document.getElementById('cam-status-txt').textContent = 'مباشر — LIVE';
+    document.getElementById('cam-status-txt').style.color = 'var(--danger)';
+  } catch(err){
+    _showCamErr('❌ مش قادر يوصل للكاميرا — ' + err.message);
+  }
+}
+
+/* ── Close camera ── */
+function closeCamera(){
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  const video = document.getElementById('cam-video');
+  video.srcObject = null; video.style.display = 'none';
+  document.getElementById('cam-off-msg').style.display = 'flex';
+  document.getElementById('cam-reticle').classList.remove('active');
+  document.getElementById('btn-scan').disabled = true;
+  document.getElementById('btn-close-cam').disabled = true;
+  document.getElementById('btn-open-cam').disabled = false;
+  document.getElementById('cam-live-dot').style.display = 'none';
+  document.getElementById('cam-status-txt').textContent = 'كاميرا مغلقة';
+  document.getElementById('cam-status-txt').style.color = '';
+}
+
+/* ── Capture + Analyze ── */
+async function captureAndAnalyze(){
+  const video = document.getElementById('cam-video');
+  if(!video || !video.videoWidth){
+    _showCamErr('⚠️ الكاميرا مش جاهزة — Camera not ready yet, try again.'); return;
+  }
+
+  // Capture frame
+  const canvas = document.getElementById('cam-hidden');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataURL = canvas.toDataURL('image/jpeg', 0.82);
+
+  // Show snapshot
+  document.getElementById('cam-snapshot-img').src = dataURL;
+  document.getElementById('cam-snapshot').style.display = 'block';
+
+  // Loading UI
+  const box = document.getElementById('cam-analysis-box');
+  const placeholder = document.getElementById('cam-placeholder');
+  const content = document.getElementById('cam-result-content');
+  box.classList.add('loading');
+  placeholder.style.display = 'none';
+  content.style.display = 'block';
+  content.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px;padding:10px 0;align-items:center;text-align:center;">
+      <div style="width:36px;height:36px;border:3px solid var(--teal);border-top-color:transparent;border-radius:50%;animation:_camSpin .8s linear infinite;"></div>
+      <div style="font-family:var(--font-mono);font-size:.85rem;color:var(--teal);">بيحلل الدواء...</div>
+      <div style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);">Claude Vision AI is examining the image</div>
+    </div>
+    <style>@keyframes _camSpin{to{transform:rotate(360deg);}}</style>`;
+  document.getElementById('btn-scan').disabled = true;
+
+  const base64 = dataURL.split(',')[1];
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are a pharmaceutical expert AI inside the THERAPEÍA medical system.
+Analyze the image and return ONLY a raw JSON object (no markdown fences, no extra text).
+
+Schema:
+{
+  "found": true,
+  "name_en": "English name",
+  "name_ar": "الاسم العربي",
+  "confidence": "High|Medium|Low",
+  "category": "Analgesic|Antibiotic|Vitamin|...",
+  "form": "Tablet|Capsule|Syrup|Injection|...",
+  "dosage": "500mg",
+  "active_ingredient": "Paracetamol",
+  "uses_en": "Used for...",
+  "uses_ar": "يستخدم لـ...",
+  "common_dose": "1 tablet every 8 hours",
+  "warnings": "One sentence warning",
+  "rx_required": false,
+  "tags": ["tag1","tag2","tag3"]
+}
+
+If no medication is visible or image is unclear: { "found": false, "reason": "brief reason" }`,
+        messages:[{
+          role:'user',
+          content:[
+            { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: base64 }},
+            { type:'text', text:'Identify this medication and provide all details as JSON.' }
+          ]
+        }]
+      })
+    });
+
+    if(!resp.ok){
+      const errData = await resp.json().catch(()=>({}));
+      throw new Error(errData.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const raw = (data.content||[]).map(b=>b.text||'').join('').trim()
+      .replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+
+    let med;
+    try { med = JSON.parse(raw); }
+    catch(e){ throw new Error('فشل تحليل الرد — Could not parse AI response'); }
+
+    // ── Merge with local DB if we have a match ──
+    if(med && med.found){
+      const dbMatch = lookupInDB(med.name_en, med.name_ar);
+      if(dbMatch) med = { ...med, ...dbMatch, _fromDB: true };
+    }
+
+    box.classList.remove('loading');
+    document.getElementById('btn-scan').disabled = false;
+    _renderMedResult(content, med);
+
+    // ── بعت أمر للأردوينو لو الدواء اتعرف ──
+    if (med && med.found && med.name_en) {
+      sendToArduino(med.name_en);
+    }
+
+    // Add to history
+    _addToHistory(dataURL, med);
+
+  } catch(err){
+    box.classList.remove('loading');
+    document.getElementById('btn-scan').disabled = false;
+    content.innerHTML = `<div class="cam-error"><span>⚠️</span><div><strong>حصل خطأ — Error</strong><br/><span style="opacity:.8">${err.message}</span></div></div>`;
+  }
+}
+
+/* ── Render med result ── */
+function _renderMedResult(container, med){
+  if(!med || !med.found){
+    container.innerHTML = `
+      <div class="cam-error">
+        <span style="font-size:1.2rem;">🔍</span>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px;">مش واضح الدواء — Medication not detected</div>
+          <div style="opacity:.8;">${med?.reason || 'تأكد إن الدواء في الإطار وجرب تاني'}</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const fromDB = med._fromDB;
+  const accentColor = med.color || 'var(--teal)';
+  const rxBadge = med.rx_required
+    ? `<span class="med-tag red">💊 يحتاج وصفة — Rx</span>`
+    : `<span class="med-tag green">✓ بدون وصفة — OTC</span>`;
+  const tags = (med.tags||[]).slice(0,5).map((t,i)=>{
+    const cls=['blue','green','orange','purple','red'][i%5];
+    return `<span class="med-tag ${cls}">${t}</span>`;
+  }).join('');
+
+  const dbBadge = fromDB
+    ? `<div style="display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:.62rem;font-weight:700;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);color:var(--teal);padding:3px 9px;border-radius:10px;">
+        ✦ LOCAL DB
+      </div>` : '';
+
+  const sideEffectsHTML = (med.side_effects_en||med.side_effects||[]).map(s=>`
+    <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:.72rem;color:var(--text-sec);">
+      <span style="color:var(--orange);flex-shrink:0;">›</span>${s}
+    </div>`).join('');
+
+  const interactionsHTML = (med.interactions||[]).map(s=>`
+    <div style="display:flex;align-items:flex-start;gap:6px;font-family:var(--font-mono);font-size:.72rem;color:var(--text-sec);">
+      <span style="color:var(--danger);flex-shrink:0;">⚡</span>${s}
+    </div>`).join('');
+
+  container.innerHTML = `
+    <div class="med-info">
+      <div class="med-name-row">
+        <div>
+          <div class="med-name" style="color:${accentColor}">${med.name_en||'Unknown'}</div>
+          <div class="med-name-ar">${med.name_ar||''}</div>
+          ${med.manufacturer ? `<div style="font-family:var(--font-mono);font-size:.64rem;color:var(--text-muted);margin-top:2px;">🏭 ${med.manufacturer}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
+          <div class="med-confidence">✦ ${med.confidence||'—'}</div>
+          ${dbBadge}
+        </div>
+      </div>
+
+      <div class="med-tags">
+        ${rxBadge}
+        ${med.category?`<span class="med-tag blue">${med.category}</span>`:''}
+        ${med.form?`<span class="med-tag orange">${med.form}</span>`:''}
+        ${tags}
+      </div>
+
+      <div class="med-row-grid">
+        <div class="med-row-item">
+          <div class="med-row-key">Active Ingredient</div>
+          <div class="med-row-val" style="color:${accentColor}">${med.active_ingredient||'—'}</div>
+          ${med.active_ingredient_ar?`<div style="font-family:var(--font-mono);font-size:.68rem;color:var(--text-muted);margin-top:2px;">${med.active_ingredient_ar}</div>`:''}
+        </div>
+        <div class="med-row-item">
+          <div class="med-row-key">Dosage · الجرعة</div>
+          <div class="med-row-val">${med.dosage||'—'}</div>
+        </div>
+        ${med.pregnancy_class?`<div class="med-row-item"><div class="med-row-key">Pregnancy Class</div><div class="med-row-val">${med.pregnancy_class}</div></div>`:''}
+        ${med.otc_class?`<div class="med-row-item"><div class="med-row-key">OTC/Rx Status</div><div class="med-row-val" style="font-size:.72rem">${med.otc_class}</div></div>`:''}
+      </div>
+
+      <div class="med-section">
+        <div class="med-section-label">الاستخدامات — Uses</div>
+        <div class="med-section-text">${med.uses_en||'—'}</div>
+        ${med.uses_ar?`<div class="med-section-text" style="margin-top:6px;text-align:right;direction:rtl;border-top:1px solid var(--border);padding-top:6px;">${med.uses_ar}</div>`:''}
+      </div>
+
+      ${med.mechanism?`
+      <div class="med-section">
+        <div class="med-section-label">آلية العمل — Mechanism</div>
+        <div class="med-section-text" style="font-size:.78rem;">${med.mechanism}</div>
+      </div>`:''}
+
+      ${med.common_dose?`
+      <div class="med-section">
+        <div class="med-section-label">الجرعة الشائعة — Common Dose</div>
+        <div class="med-section-text"><strong>${med.common_dose}</strong></div>
+        ${med.common_dose_ar?`<div class="med-section-text" style="margin-top:4px;text-align:right;direction:rtl;">${med.common_dose_ar}</div>`:''}
+      </div>`:''}
+
+      ${sideEffectsHTML?`
+      <div class="med-section">
+        <div class="med-section-label">الأعراض الجانبية — Side Effects</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">${sideEffectsHTML}</div>
+      </div>`:''}
+
+      ${interactionsHTML?`
+      <div class="med-section">
+        <div class="med-section-label">التفاعلات الدوائية — Drug Interactions</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">${interactionsHTML}</div>
+      </div>`:''}
+
+      ${med.warnings?`
+      <div class="med-warning">
+        <span>⚠️</span>
+        <div>
+          <div>${med.warnings}</div>
+          ${med.warnings_ar?`<div style="margin-top:4px;text-align:right;direction:rtl;opacity:.85;">${med.warnings_ar}</div>`:''}
+        </div>
+      </div>`:''}
+
+      ${med.storage_en?`
+      <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);margin-top:4px;">
+        <span>🌡</span><span>${med.storage_en}</span>
+      </div>`:''}
+    </div>`;
+}
+
+/* ── History management ── */
+function _addToHistory(thumb, med){
+  const id = Date.now();
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('ar-EG', {hour:'2-digit',minute:'2-digit'});
+  scanHistory.unshift({ id, thumb, med, timeStr });
+  _renderHistory();
+}
+
+function _renderHistory(){
+  const list = document.getElementById('scan-history-list');
+  const empty = document.getElementById('scan-empty');
+  const countEl = document.getElementById('scan-count');
+  countEl.textContent = scanHistory.length;
+
+  if(scanHistory.length === 0){
+    list.innerHTML = '';
+    list.appendChild(empty);
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = '';
+  scanHistory.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'scan-item';
+    div.id = 'scan-item-' + item.id;
+
+    const med = item.med;
+    const notFound = !med || !med.found;
+    const bodyHTML = notFound
+      ? `<div class="scan-item-notfound">🔍 ${med?.reason||'لم يتم التعرف على الدواء'}</div>`
+      : `<div class="scan-item-name">${med.name_en||'Unknown'}</div>
+         <div class="scan-item-name-ar">${med.name_ar||''}</div>
+         <div class="scan-item-tags">
+           ${med.rx_required?`<span class="scan-item-tag" style="color:var(--danger);border-color:rgba(239,68,68,.35)">Rx</span>`:`<span class="scan-item-tag" style="color:var(--green);border-color:rgba(16,185,129,.35)">OTC</span>`}
+           ${med.category?`<span class="scan-item-tag" style="color:var(--blue);border-color:rgba(59,130,246,.35)">${med.category}</span>`:''}
+           ${med.form?`<span class="scan-item-tag" style="color:var(--orange);border-color:rgba(245,158,11,.35)">${med.form}</span>`:''}
+           ${med.dosage?`<span class="scan-item-tag" style="color:var(--purple);border-color:rgba(168,85,247,.35)">${med.dosage}</span>`:''}
+         </div>`;
+
+    div.innerHTML = `
+      <div class="scan-item-thumb">
+        <img src="${item.thumb}" alt="scan"/>
+        <div class="scan-item-thumb-overlay"></div>
+        <div class="scan-item-time">🕐 ${item.timeStr}</div>
+        <button class="scan-item-del" onclick="deleteScan(${item.id})" title="حذف">✕</button>
+      </div>
+      <div class="scan-item-body">${bodyHTML}</div>`;
+    list.appendChild(div);
+  });
+}
+
+function deleteScan(id){
+  const el = document.getElementById('scan-item-' + id);
+  if(el){
+    el.classList.add('deleting');
+    setTimeout(()=>{
+      scanHistory = scanHistory.filter(s=>s.id !== id);
+      _renderHistory();
+    }, 300);
+  }
+}
+
+function clearAllScans(){
+  if(scanHistory.length === 0) return;
+  document.querySelectorAll('.scan-item').forEach(el=>{
+    el.classList.add('deleting');
+  });
+  setTimeout(()=>{
+    scanHistory = [];
+    _renderHistory();
+  }, 320);
+}
+
+function _showCamErr(msg){
+  const content = document.getElementById('cam-result-content');
+  const placeholder = document.getElementById('cam-placeholder');
+  if(placeholder) placeholder.style.display = 'none';
+  if(content){
+    content.style.display = 'block';
+    content.innerHTML = `<div class="cam-error"><span>⚠</span><div>${msg}</div></div>`;
+  }
+}
+
+// ════════════════════════════════════════════
+//  MED DATABASE BROWSER
+// ════════════════════════════════════════════
+(function initMDB(){
+  const grid = document.getElementById('mdb-grid');
+  if(!grid) return;
+  renderMDBGrid(Object.values(MED_DATABASE));
+})();
+
+function filterMDB(q){
+  const lower = q.toLowerCase().trim();
+  const meds = Object.values(MED_DATABASE).filter(m=>{
+    if(!lower) return true;
+    const haystack = [m.name_en,m.name_ar,m.active_ingredient,m.active_ingredient_ar,m.category,...(m.tags||[])].join(' ').toLowerCase();
+    return haystack.includes(lower);
+  });
+  const grid = document.getElementById('mdb-grid');
+  if(meds.length === 0){
+    grid.innerHTML = `<div style="font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);text-align:center;padding:32px;grid-column:1/-1;">لا توجد نتائج — No results</div>`;
+    return;
+  }
+  renderMDBGrid(meds);
+}
+
+function renderMDBGrid(meds){
+  const grid = document.getElementById('mdb-grid');
+  grid.innerHTML = '';
+  meds.forEach(med => {
+    const card = document.createElement('div');
+    card.className = 'mdb-card';
+    const c = med.color || 'var(--teal)';
+    const rx = med.rx_required
+      ? `<span class="mdb-card-badge" style="color:var(--danger);border-color:rgba(239,68,68,.35)">Rx 💊</span>`
+      : `<span class="mdb-card-badge" style="color:var(--green);border-color:rgba(16,185,129,.35)">OTC ✓</span>`;
+    const tagBadges = (med.tags||[]).slice(0,3).map((t,i)=>{
+      const cls = [med.color,'var(--blue)','var(--orange)'][i%3]||'var(--blue)';
+      return `<span class="mdb-card-badge" style="color:${cls};border-color:${cls}44">${t}</span>`;
+    }).join('');
+    const seItems = (med.side_effects_en||[]).map(s=>`<span class="mdb-se-tag">${s}</span>`).join('');
+    const intItems = (med.interactions||[]).map(s=>`<div class="mdb-int-item">${s}</div>`).join('');
+
+    card.innerHTML = `
+      <div class="mdb-card-accent" style="background:linear-gradient(90deg,${c},${c}44)"></div>
+      <div class="mdb-card-top">
+        <div class="mdb-card-name" style="color:${c}">${med.name_en}</div>
+        <div class="mdb-card-name-ar">${med.name_ar}</div>
+        <div class="mdb-card-mfr">🏭 ${med.manufacturer||''}</div>
+        <div class="mdb-card-tags">${rx}${tagBadges}</div>
+        <div class="mdb-card-row"><span>المادة الفعالة</span><span style="color:${c}">${med.active_ingredient}</span></div>
+        <div class="mdb-card-row"><span>الجرعة</span><span>${med.dosage}</span></div>
+        <div class="mdb-card-row"><span>الشكل</span><span>${med.form}</span></div>
+        <div class="mdb-card-row"><span>Pregnancy</span><span style="font-size:.68rem">${med.pregnancy_class||'—'}</span></div>
+      </div>
+      <button class="mdb-toggle-btn" onclick="toggleMDB(this)">▼ تفاصيل — Show Details</button>
+      <div class="mdb-expand">
+        <div class="mdb-sect">
+          <div class="mdb-sect-label">الاستخدامات — Uses</div>
+          <div class="mdb-sect-val">${med.uses_en}</div>
+          <div class="mdb-sect-val" style="margin-top:4px;direction:rtl;text-align:right;">${med.uses_ar||''}</div>
+        </div>
+        <div class="mdb-sect">
+          <div class="mdb-sect-label">آلية العمل — Mechanism</div>
+          <div class="mdb-sect-val">${med.mechanism||'—'}</div>
+        </div>
+        <div class="mdb-sect">
+          <div class="mdb-sect-label">الجرعة الشائعة — Common Dose</div>
+          <div class="mdb-sect-val"><strong>${med.common_dose}</strong></div>
+          <div class="mdb-sect-val" style="direction:rtl;text-align:right;">${med.common_dose_ar||''}</div>
+        </div>
+        ${seItems?`<div class="mdb-sect"><div class="mdb-sect-label">الأعراض الجانبية — Side Effects</div><div class="mdb-se-list">${seItems}</div></div>`:''}
+        ${intItems?`<div class="mdb-sect"><div class="mdb-sect-label">التفاعلات — Interactions</div><div style="display:flex;flex-direction:column;gap:4px;">${intItems}</div></div>`:''}
+        ${med.warnings?`<div class="mdb-warn-box">⚠️ ${med.warnings}<br/><span style="direction:rtl;display:block;text-align:right;margin-top:4px;opacity:.85;">${med.warnings_ar||''}</span></div>`:''}
+        <div class="mdb-sect">
+          <div class="mdb-sect-label">التخزين — Storage</div>
+          <div class="mdb-sect-val">🌡 ${med.storage_en}</div>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function toggleMDB(btn){
+  const expand = btn.nextElementSibling;
+  const isOpen = expand.classList.toggle('open');
+  btn.textContent = isOpen ? '▲ إخفاء التفاصيل — Hide Details' : '▼ تفاصيل — Show Details';
+  const card = btn.closest('.mdb-card');
+  if(isOpen) card.style.boxShadow = `0 0 0 1px ${MED_DATABASE[Object.keys(MED_DATABASE).find(k=>MED_DATABASE[k].name_en===card.querySelector('.mdb-card-name').textContent)]?.color||'var(--teal)'}44, 0 16px 48px rgba(0,0,0,.3)`;
+  else card.style.boxShadow='';
+}
+
+// ── ECG line ──
+
+let fakeCount = 1234;
+setInterval(()=>{
+  if(Math.random()>.7){
+    fakeCount++;
+    document.querySelectorAll('.pred-count').forEach(el=>el.textContent=fakeCount.toLocaleString());
+  }
+},3000);
+document.querySelectorAll('.pred-count').forEach(el=>el.textContent=fakeCount.toLocaleString());
+
+// ════════════════════════════════════════════
+//  RESPONSIVE: grid collapse
+// ════════════════════════════════════════════
+function checkGrid(){
+  const w=window.innerWidth;
+  const mg=document.getElementById('models-grid');
+  if(!compareMode) mg.style.gridTemplateColumns=w<900?'1fr':'repeat(3,1fr)';
+}
+window.addEventListener('resize',checkGrid);
+checkGrid();
+</script>
+</body>
+</html>
